@@ -13,6 +13,7 @@ from app.models import (
 )
 
 # Criar aplicação
+# Cria a aplicacao usando o ambiente definido em FLASK_ENV.
 app = create_app(os.environ.get('FLASK_ENV', 'development'))
 
 @app.shell_context_processor
@@ -47,4 +48,5 @@ def make_shell_context():
     }
 
 if __name__ == '__main__':
+    # Sobe o servidor local na porta padrao do projeto.
     app.run(debug=True, host='0.0.0.0', port=3000)

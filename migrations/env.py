@@ -9,7 +9,7 @@ from alembic import context
 # access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
+# Configura logs usados pelo Alembic.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
@@ -17,6 +17,7 @@ logger = logging.getLogger('alembic.env')
 
 def get_engine():
     try:
+        # Compatibilidade com versoes antigas do Flask-SQLAlchemy.
         # this works with Flask-SQLAlchemy<3 and Alchemical
         return current_app.extensions['migrate'].db.get_engine()
     except TypeError:
@@ -26,6 +27,7 @@ def get_engine():
 
 def get_engine_url():
     try:
+        # Usa a URL real do banco configurado no Flask.
         return get_engine().url.render_as_string(hide_password=False).replace(
             '%', '%%')
     except AttributeError:
@@ -46,6 +48,7 @@ target_db = current_app.extensions['migrate'].db
 
 
 def get_metadata():
+    # Metadados dizem ao Alembic quais tabelas existem nos models.
     if hasattr(target_db, 'metadatas'):
         return target_db.metadatas[None]
     return target_db.metadata
@@ -63,6 +66,7 @@ def run_migrations_offline():
     script output.
 
     """
+    # Modo offline gera SQL sem abrir conexao com o banco.
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url, target_metadata=get_metadata(), literal_binds=True
@@ -90,6 +94,7 @@ def run_migrations_online():
                 directives[:] = []
                 logger.info('No changes in schema detected.')
 
+    # Modo online executa a migracao conectando no banco real.
     connectable = get_engine()
 
     with connectable.connect() as connection:
@@ -104,6 +109,7 @@ def run_migrations_online():
             context.run_migrations()
 
 
+# Escolhe o modo conforme o comando executado pelo Alembic.
 if context.is_offline_mode():
     run_migrations_offline()
 else:

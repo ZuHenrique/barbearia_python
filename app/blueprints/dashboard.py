@@ -14,12 +14,14 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/sistema/painel')
 def index():
     """Dashboard principal do painel"""
     # Dados gerais
+    # Indicadores principais exibidos no topo do painel.
     total_clientes = Cliente.query.count()
     total_servicos_mes = Agendamento.query.filter(
         Agendamento.status == 'Concluído'
     ).count()
     
     # Contas
+    # Contas vencidas ou vencendo ate hoje.
     hoje = datetime.now().date()
     contas_vencer_hoje = ContaPagar.query.filter(
         ContaPagar.data_venc <= hoje,
@@ -32,20 +34,24 @@ def index():
     ).count()
     
     # Estoque baixo
+    # Produtos que precisam de reposicao.
     produtos_baixo = Produto.query.filter(
         Produto.estoque <= Produto.nivel_estoque
     ).count()
     
     # Agendamentos de hoje
+    # Volume de atendimentos marcados para hoje.
     agendamentos_hoje = Agendamento.query.filter(
         Agendamento.data == hoje
     ).count()
     
     # Cálculos
+    # Percentual simples de agendamentos concluidos.
     total_agendamentos = Agendamento.query.count()
     taxa_conclusao = (total_servicos_mes / total_agendamentos * 100) if total_agendamentos > 0 else 0
     
     # Últimos agendamentos
+    # Lista curta para atividade recente do painel.
     ultimos_agendamentos = Agendamento.query.order_by(
         Agendamento.data_lanc.desc()
     ).limit(5).all()
@@ -69,6 +75,7 @@ def index():
 def api_dados_dashboard():
     """API para dados do dashboard"""
     try:
+        # Dados compactos para cards/graficos carregados via AJAX.
         hoje = datetime.now().date()
         
         # Agendamentos últimos 7 dias

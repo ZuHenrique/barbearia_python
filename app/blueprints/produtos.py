@@ -11,6 +11,7 @@ produtos_bp = Blueprint('produtos', __name__, url_prefix='/sistema/painel/produt
 @login_required
 def listar():
     """Lista produtos"""
+    # Pagina produtos para manter a listagem rapida.
     page = request.args.get('page', 1, type=int)
     produtos = Produto.query.paginate(page=page, per_page=20)
     return render_template('painel/produtos/listar.html', produtos=produtos)
@@ -22,6 +23,7 @@ def novo():
     """Criar novo produto"""
     if request.method == 'POST':
         try:
+            # Cria produto com precos e estoque inicial.
             produto = Produto(
                 nome=request.form.get('nome'),
                 categoria_id=request.form.get('categoria_id'),
@@ -39,6 +41,7 @@ def novo():
             db.session.rollback()
             flash(f'Erro ao criar produto: {str(e)}', 'danger')
     
+    # Categorias preenchem o select do formulario.
     categorias = CatagoriaProduto.query.all()
     return render_template('painel/produtos/novo.html', categorias=categorias)
 
@@ -47,10 +50,12 @@ def novo():
 @login_required
 def editar(id):
     """Editar produto"""
+    # Carrega o produto antes de editar.
     produto = Produto.query.get_or_404(id)
     
     if request.method == 'POST':
         try:
+            # Atualiza cadastro, precos e limites de estoque.
             produto.nome = request.form.get('nome')
             produto.categoria_id = request.form.get('categoria_id')
             produto.valor_compra = float(request.form.get('valor_compra'))
@@ -66,6 +71,7 @@ def editar(id):
             db.session.rollback()
             flash(f'Erro ao atualizar produto: {str(e)}', 'danger')
     
+    # Recarrega categorias para a tela de edicao.
     categorias = CatagoriaProduto.query.all()
     return render_template('painel/produtos/editar.html', produto=produto, categorias=categorias)
 
@@ -74,6 +80,7 @@ def editar(id):
 @login_required
 def excluir(id):
     """Excluir produto"""
+    # Remove o produto selecionado.
     produto = Produto.query.get_or_404(id)
     db.session.delete(produto)
     db.session.commit()
@@ -85,6 +92,7 @@ def excluir(id):
 @login_required
 def estoque_baixo():
     """Listar produtos com estoque baixo"""
+    # Compara estoque atual com nivel minimo definido no produto.
     produtos = Produto.query.filter(
         Produto.estoque <= Produto.nivel_estoque
     ).all()
@@ -95,6 +103,7 @@ def estoque_baixo():
 @login_required
 def entradas():
     """Listar entradas de estoque"""
+    # Historico de entradas de estoque.
     page = request.args.get('page', 1, type=int)
     entradas = Entrada.query.paginate(page=page, per_page=20)
     return render_template('painel/produtos/entradas.html', entradas=entradas)
@@ -104,6 +113,7 @@ def entradas():
 @login_required
 def saidas():
     """Listar saídas de estoque"""
+    # Historico de saidas de estoque.
     page = request.args.get('page', 1, type=int)
     saidas = Saida.query.paginate(page=page, per_page=20)
     return render_template('painel/produtos/saidas.html', saidas=saidas)

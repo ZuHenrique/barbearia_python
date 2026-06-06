@@ -11,6 +11,7 @@ usuarios_bp = Blueprint('usuarios', __name__, url_prefix='/sistema/painel/usuari
 @login_required
 def listar():
     """Lista usuários"""
+    # Lista usuarios em paginas para manter a tela leve.
     page = request.args.get('page', 1, type=int)
     usuarios = Usuario.query.paginate(page=page, per_page=20)
     return render_template('painel/usuarios/listar.html', usuarios=usuarios)
@@ -22,6 +23,7 @@ def novo():
     """Criar novo usuário"""
     if request.method == 'POST':
         try:
+            # Email e CPF precisam ser unicos no sistema.
             email = request.form.get('email')
             cpf = request.form.get('cpf')
             
@@ -33,6 +35,7 @@ def novo():
                 flash('CPF já existe!', 'danger')
                 return redirect(url_for('usuarios.novo'))
             
+            # Cria usuario interno/barbeiro com dados do formulario.
             usuario = Usuario(
                 nome=request.form.get('nome'),
                 email=email,
@@ -42,6 +45,7 @@ def novo():
                 atendimento=request.form.get('atendimento', 'Não'),
                 chave_pix=request.form.get('chave_pix')
             )
+            # A senha nunca fica em texto puro.
             usuario.set_senha(request.form.get('senha'))
             
             db.session.add(usuario)
@@ -59,10 +63,12 @@ def novo():
 @login_required
 def editar(id):
     """Editar usuário"""
+    # Carrega o usuario antes de editar.
     usuario = Usuario.query.get_or_404(id)
     
     if request.method == 'POST':
         try:
+            # Atualiza dados de perfil e atendimento.
             usuario.nome = request.form.get('nome')
             usuario.nivel = request.form.get('nivel')
             usuario.telefone = request.form.get('telefone')
@@ -71,6 +77,7 @@ def editar(id):
             usuario.ativo = request.form.get('ativo', 'Não')
             
             senha = request.form.get('senha')
+            # Troca a senha somente se uma nova foi enviada.
             if senha:
                 usuario.set_senha(senha)
             
@@ -88,6 +95,7 @@ def editar(id):
 @login_required
 def excluir(id):
     """Excluir usuário"""
+    # Exclui o usuario selecionado.
     usuario = Usuario.query.get_or_404(id)
     db.session.delete(usuario)
     db.session.commit()

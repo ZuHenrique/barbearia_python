@@ -12,9 +12,11 @@ clientes_bp = Blueprint('clientes', __name__, url_prefix='/sistema/painel/client
 @login_required
 def listar():
     """Lista clientes com busca"""
+    # Paginacao evita carregar clientes demais de uma vez.
     page = request.args.get('page', 1, type=int)
     busca = request.args.get('q', '')
 
+    # Busca por nome, telefone ou email.
     query = Cliente.query
     if busca:
         query = query.filter(
@@ -31,6 +33,7 @@ def listar():
 @login_required
 def ver(id):
     """Ver perfil completo do cliente"""
+    # Perfil mostra o cliente e seus ultimos agendamentos.
     cliente = Cliente.query.get_or_404(id)
     agendamentos = Agendamento.query.filter_by(cliente_id=id).order_by(Agendamento.data.desc()).limit(20).all()
     return render_template('painel/clientes/ver.html', cliente=cliente, agendamentos=agendamentos)
@@ -42,9 +45,11 @@ def novo():
     """Criar novo cliente"""
     if request.method == 'POST':
         try:
+            # Data pode vir vazia; nesse caso fica None.
             data_nasc_str = request.form.get('data_nasc')
             data_nasc = datetime.strptime(data_nasc_str, '%Y-%m-%d').date() if data_nasc_str else None
 
+            # Monta o novo cliente com dados do formulario.
             cliente = Cliente(
                 nome=request.form.get('nome'),
                 telefone=request.form.get('telefone'),
@@ -68,10 +73,12 @@ def novo():
 @login_required
 def editar(id):
     """Editar cliente"""
+    # Garante que o cliente existe antes de editar.
     cliente = Cliente.query.get_or_404(id)
 
     if request.method == 'POST':
         try:
+            # Atualiza dados cadastrais e fidelidade.
             data_nasc_str = request.form.get('data_nasc')
             cliente.nome = request.form.get('nome')
             cliente.telefone = request.form.get('telefone')
@@ -95,6 +102,7 @@ def editar(id):
 @login_required
 def excluir(id):
     """Excluir cliente"""
+    # Exclui o cliente selecionado.
     cliente = Cliente.query.get_or_404(id)
     db.session.delete(cliente)
     db.session.commit()
@@ -107,11 +115,13 @@ def criar_rapido():
     """Cria cliente rapidamente via JSON (para modal)"""
     from flask import jsonify
     try:
+        # Endpoint usado por modal para criar cliente sem sair da tela.
         data = request.get_json()
         nome     = (data.get('nome') or '').strip()
         telefone = (data.get('telefone') or '').strip()
         email    = (data.get('email') or '').strip() or None
 
+        # Nome e telefone sao o minimo para agendar.
         if not nome or not telefone:
             return jsonify({'status': 'error', 'message': 'Nome e telefone são obrigatórios'}), 400
 

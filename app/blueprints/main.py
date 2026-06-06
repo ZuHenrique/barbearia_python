@@ -16,6 +16,7 @@ def login_redirect():
 @main_bp.route('/')
 def index():
     """Página inicial pública"""
+    # Busca dados editaveis que aparecem na home publica.
     config = Config.query.first()
     comentarios = Comentario.query.filter_by(ativo='Sim').all()
     textos = TextoIndex.query.filter_by(ativo='Sim').order_by(TextoIndex.ordem).all()
@@ -29,6 +30,7 @@ def index():
 @main_bp.route('/servicos')
 def servicos():
     """Página de serviços"""
+    # Mostra apenas servicos ativos para visitantes.
     config = Config.query.first()
     servicos = Servico.query.filter_by(ativo='Sim').all()
     
@@ -40,6 +42,7 @@ def servicos():
 @main_bp.route('/produtos')
 def produtos():
     """Página de produtos"""
+    # Produtos ainda nao possuem filtro de ativo neste modelo.
     config = Config.query.first()
     produtos = Produto.query.all()
     
@@ -51,6 +54,7 @@ def produtos():
 @main_bp.route('/agendamentos', methods=['GET', 'POST'])
 def agendamentos():
     """Página de agendamentos multi-step"""
+    # A tela renderiza o fluxo; a criacao real acontece pela API.
     config = Config.query.first()
     
     if request.method == 'POST':

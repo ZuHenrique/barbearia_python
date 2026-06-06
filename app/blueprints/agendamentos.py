@@ -13,10 +13,12 @@ agendamentos_bp = Blueprint('agendamentos', __name__, url_prefix='/sistema/paine
 @login_required
 def listar():
     """Lista agendamentos com filtros"""
+    # Filtros chegam pela URL; por padrao mostra a agenda de hoje.
     data_filtro = request.args.get('data', date.today().isoformat())
     status_filtro = request.args.get('status', '')
     funcionario_filtro = request.args.get('funcionario_id', '')
 
+    # Monta a consulta aos poucos conforme os filtros.
     query = Agendamento.query
 
     try:
@@ -46,6 +48,7 @@ def listar():
 @login_required
 def confirmar(id):
     """Confirmar chegada do cliente"""
+    # get_or_404 evita atualizar um agendamento inexistente.
     ag = Agendamento.query.get_or_404(id)
     ag.status = 'Confirmado'
     db.session.commit()
@@ -57,6 +60,7 @@ def confirmar(id):
 @login_required
 def concluir(id):
     """Concluir servico - adiciona ponto fidelidade"""
+    # Marca como concluido e depois adiciona ponto de fidelidade.
     ag = Agendamento.query.get_or_404(id)
     ag.status = 'Concluido'
     db.session.commit()
@@ -71,6 +75,7 @@ def concluir(id):
 @login_required
 def cancelar(id):
     """Cancelar agendamento"""
+    # Registra cancelamento mantendo o motivo nas observacoes.
     ag = Agendamento.query.get_or_404(id)
     motivo = request.form.get('motivo', '')
     ag.status = 'Cancelado'
@@ -87,6 +92,7 @@ def novo():
     """Criar novo agendamento"""
     if request.method == 'POST':
         try:
+            # Converte campos do formulario para os tipos usados no banco.
             funcionario_id = request.form.get('funcionario_id')
             cliente_id = request.form.get('cliente_id')
             servico_id = request.form.get('servico_id')
@@ -94,6 +100,7 @@ def novo():
             hora = datetime.strptime(request.form.get('hora'), '%H:%M').time()
             obs = request.form.get('obs')
 
+            # Impede dois agendamentos no mesmo funcionario/data/hora.
             agendamento_existente = Agendamento.query.filter(
                 and_(
                     Agendamento.data == data,
@@ -106,9 +113,11 @@ def novo():
                 flash('Este horario nao esta disponivel!', 'danger')
                 return redirect(url_for('agendamentos.novo'))
 
+            # Extrai o id numerico do usuario logado.
             uid = current_user.get_id()
             usuario_id = int(uid.split('_')[1]) if '_' in str(uid) else current_user.id
 
+            # Cria o registro com status inicial Agendado.
             novo_agendamento = Agendamento(
                 funcionario_id=funcionario_id,
                 cliente_id=cliente_id,
@@ -131,6 +140,7 @@ def novo():
             flash(f'Erro ao criar agendamento: {str(e)}', 'danger')
             return redirect(url_for('agendamentos.novo'))
 
+    # Dados usados para preencher selects do formulario.
     funcionarios = Usuario.query.filter_by(atendimento='Sim').all()
     clientes = Cliente.query.order_by(Cliente.nome).all()
     servicos = Servico.query.filter_by(ativo='Sim').all()
@@ -145,10 +155,12 @@ def novo():
 @login_required
 def editar(id):
     """Editar agendamento"""
+    # Carrega o agendamento antes de editar.
     agendamento = Agendamento.query.get_or_404(id)
 
     if request.method == 'POST':
         try:
+            # Atualiza somente os campos editaveis da tela.
             agendamento.funcionario_id = request.form.get('funcionario_id')
             agendamento.servico_id = request.form.get('servico_id')
             agendamento.data = datetime.strptime(request.form.get('data'), '%Y-%m-%d').date()
@@ -163,6 +175,7 @@ def editar(id):
             db.session.rollback()
             flash(f'Erro ao atualizar agendamento: {str(e)}', 'danger')
 
+    # Recarrega opcoes para renderizar a tela de edicao.
     funcionarios = Usuario.query.filter_by(atendimento='Sim').all()
     servicos = Servico.query.filter_by(ativo='Sim').all()
     return render_template('painel/agendamentos/editar.html',
@@ -176,6 +189,7 @@ def editar(id):
 @login_required
 def excluir(id):
     """Excluir agendamento"""
+    # Remove definitivamente o agendamento selecionado.
     agendamento = Agendamento.query.get_or_404(id)
     db.session.delete(agendamento)
     db.session.commit()

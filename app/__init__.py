@@ -15,9 +15,11 @@ def create_app(config_name='development'):
     app = Flask(__name__)
     
     # Configurações
+    # Carrega as configuracoes do ambiente escolhido.
     app.config.from_object(config[config_name])
     
     # Inicializar extensões
+    # Liga banco, login e migracoes ao app Flask.
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -25,10 +27,12 @@ def create_app(config_name='development'):
     login_manager.login_message_category = 'info'
     
     # Inicializar Flask-Migrate
+    # Habilita comandos flask db migrate/upgrade.
     migrate.init_app(app, db)
     
     @login_manager.user_loader
     def load_user(user_id):
+        # O prefixo identifica se quem logou foi usuario interno ou cliente.
         try:
             if user_id.startswith('usuario_'):
                 return Usuario.query.get(int(user_id.split('_')[1]))
@@ -39,6 +43,7 @@ def create_app(config_name='development'):
         return None
     
     # Criar contexto de aplicação
+    # Registra rotas e prepara tabelas dentro do contexto da aplicacao.
     with app.app_context():
         # Importar blueprints
         from app.blueprints.auth import auth_bp
@@ -56,9 +61,11 @@ def create_app(config_name='development'):
         from app.blueprints.onboarding import onboarding_bp
         
         # Inicializar OAuth
+        # Prepara login social da area do cliente.
         init_oauth(app)
         
         # Registrar blueprints
+        # Cada blueprint concentra as rotas de um modulo.
         app.register_blueprint(auth_bp)
         app.register_blueprint(main_bp)
         app.register_blueprint(dashboard_bp)
@@ -74,6 +81,7 @@ def create_app(config_name='development'):
         app.register_blueprint(onboarding_bp)
         
         # Criar tabelas
+        # Garante tabelas no desenvolvimento local.
         db.create_all()
     
     return app

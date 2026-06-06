@@ -16,13 +16,16 @@ from datetime import datetime, date, timedelta, time
 def init_database():
     """Inicializa o banco de dados com dados de teste"""
     
+    # Cria app para ter acesso ao contexto Flask e ao banco.
     app = create_app()
     
     with app.app_context():
         print("🗂️  Criando tabelas...")
+        # Cria tabelas que ainda nao existem.
         db.create_all()
         
         # Verificar se já tem dados
+        # Evita duplicar dados de teste se o seed ja rodou.
         if Usuario.query.count() > 0:
             print("⚠️  Banco de dados já possui dados. Pulando seed.")
             return
@@ -39,6 +42,7 @@ def init_database():
             GrupoAcesso(nome='Relatórios'),
             GrupoAcesso(nome='Dados Site'),
         ]
+        # flush gera IDs sem fechar a transacao.
         db.session.add_all(grupos)
         db.session.flush()
         
@@ -61,6 +65,7 @@ def init_database():
             Acesso(nome='Relatórios', chave='relatorios', grupo_id=6),
             Acesso(nome='Comentários', chave='comentarios', grupo_id=7),
         ]
+        # Acessos sao as chaves usadas para permissoes.
         db.session.add_all(acessos)
         db.session.flush()
         
@@ -74,6 +79,7 @@ def init_database():
             atendimento='Sim',
             ativo='Sim'
         )
+        # Senha de teste do administrador.
         admin.set_senha('123')
         
         barbeiro1 = Usuario(
@@ -102,6 +108,7 @@ def init_database():
         db.session.flush()
         
         # Adicionar permissões
+        # Administrador recebe todas as permissoes iniciais.
         for acesso in acessos:
             perm = UsuarioPermissao(usuario_id=admin.id, permissao_id=acesso.id)
             db.session.add(perm)
@@ -159,6 +166,7 @@ def init_database():
         
         # ========== HORÁRIOS ==========
         horas = ['09:00', '09:30', '10:00', '10:30', '11:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00']
+        # Cria horarios de atendimento para cada barbeiro.
         for barbeiro in [barbeiro1, barbeiro2]:
             for hora_str in horas:
                 hora = datetime.strptime(hora_str, '%H:%M').time()
@@ -167,6 +175,7 @@ def init_database():
         
         # ========== DIAS DE TRABALHO ==========
         dias_semana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']
+        # Define dias de trabalho dos barbeiros.
         for barbeiro in [barbeiro1, barbeiro2]:
             for dia in dias_semana:
                 dia_obj = Dia(dia=dia, funcionario_id=barbeiro.id)
@@ -239,6 +248,7 @@ def init_database():
         db.session.add_all(agendamentos)
         
         # ========== SALVAR ==========
+        # Salva todos os dados de teste em uma unica transacao.
         db.session.commit()
         print("✅ Banco de dados inicializado com sucesso!")
         print("\n📊 Dados criados:")

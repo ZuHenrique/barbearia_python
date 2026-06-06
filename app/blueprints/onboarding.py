@@ -15,11 +15,13 @@ SLUGS_RESERVADOS = ['www', 'app', 'admin', 'api', 'mail', 'ftp', 'blog', 'suport
 
 def _slug_valido(slug):
     """Verifica se o slug tem formato válido (só letras, números e hífen)"""
+    # Slug vira subdominio, por isso precisa ser simples e previsivel.
     return bool(re.match(r'^[a-z0-9][a-z0-9\-]{1,58}[a-z0-9]$', slug))
 
 
 def _slug_disponivel(slug):
     """Verifica se o slug está disponível"""
+    # Evita nomes tecnicos/reservados e duplicidade no banco.
     if slug in SLUGS_RESERVADOS:
         return False
     return Barbearia.query.filter_by(slug=slug).first() is None
@@ -30,6 +32,7 @@ def _slug_disponivel(slug):
 # ------------------------------------------------------------------
 @onboarding_bp.route('/verificar-slug')
 def verificar_slug():
+    # Rota chamada por AJAX enquanto o usuario digita o subdominio.
     slug = request.args.get('slug', '').lower().strip()
     if not slug:
         return jsonify({'disponivel': False, 'mensagem': 'Informe um subdomínio'})
@@ -46,6 +49,7 @@ def verificar_slug():
 @onboarding_bp.route('/barbearia', methods=['GET', 'POST'])
 def cadastro_barbearia():
     if request.method == 'POST':
+        # Normaliza dados enviados pelo formulario.
         nome = request.form.get('nome', '').strip()
         slug = request.form.get('slug', '').lower().strip()
         email = request.form.get('email', '').strip()
@@ -56,6 +60,7 @@ def cadastro_barbearia():
         estado = request.form.get('estado', '').strip()
 
         # Validações
+        # Junta todos os erros para mostrar de uma vez.
         erros = []
         if not nome:
             erros.append('Nome da barbearia é obrigatório')
@@ -79,6 +84,7 @@ def cadastro_barbearia():
                                    form_data=request.form)
 
         # Buscar plano Trial (ou criar se não existir)
+        # Reaproveita ou cria o plano inicial gratuito.
         plano_trial = Plano.query.filter_by(nome='Trial').first()
         if not plano_trial:
             plano_trial = Plano(
@@ -96,6 +102,7 @@ def cadastro_barbearia():
             db.session.commit()
 
         # Criar conta
+        # Cria o tenant do tipo barbearia com 30 dias de trial.
         nova_barbearia = Barbearia(
             tipo='barbearia',
             nome=nome,
@@ -113,6 +120,7 @@ def cadastro_barbearia():
         db.session.commit()
 
         # Salvar na sessão para redirecionar ao painel
+        # Guarda dados basicos da conta na sessao atual.
         session['barbearia_id'] = nova_barbearia.id
         session['barbearia_slug'] = nova_barbearia.slug
         session['barbearia_tipo'] = 'barbearia'
@@ -129,6 +137,7 @@ def cadastro_barbearia():
 @onboarding_bp.route('/barbeiro', methods=['GET', 'POST'])
 def cadastro_barbeiro():
     if request.method == 'POST':
+        # Normaliza dados enviados pelo formulario.
         nome = request.form.get('nome', '').strip()
         slug = request.form.get('slug', '').lower().strip()
         email = request.form.get('email', '').strip()
@@ -141,6 +150,7 @@ def cadastro_barbeiro():
         instagram = request.form.get('instagram', '').strip()
 
         # Validações
+        # Junta todos os erros para mostrar de uma vez.
         erros = []
         if not nome:
             erros.append('Seu nome é obrigatório')
@@ -164,6 +174,7 @@ def cadastro_barbeiro():
                                    form_data=request.form)
 
         # Buscar/criar plano Trial
+        # Reaproveita ou cria plano inicial para barbeiro autonomo.
         plano_trial = Plano.query.filter_by(nome='Trial').first()
         if not plano_trial:
             plano_trial = Plano(
@@ -181,6 +192,7 @@ def cadastro_barbeiro():
             db.session.commit()
 
         # Criar conta do barbeiro
+        # Cria o tenant do tipo barbeiro com 30 dias de trial.
         novo_barbeiro = Barbearia(
             tipo='barbeiro',
             nome=nome,
@@ -199,6 +211,7 @@ def cadastro_barbeiro():
         db.session.add(novo_barbeiro)
         db.session.commit()
 
+        # Guarda dados basicos da conta na sessao atual.
         session['barbearia_id'] = novo_barbeiro.id
         session['barbearia_slug'] = novo_barbeiro.slug
         session['barbearia_tipo'] = 'barbeiro'
@@ -214,5 +227,6 @@ def cadastro_barbeiro():
 # ------------------------------------------------------------------
 @onboarding_bp.route('/sucesso/<slug>')
 def sucesso(slug):
+    # Mostra a conta recem-criada pelo slug publico.
     conta = Barbearia.query.filter_by(slug=slug).first_or_404()
     return render_template('public/cadastro_sucesso.html', conta=conta)

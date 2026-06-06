@@ -20,9 +20,11 @@ def index():
 @login_required
 def agendamentos():
     """Relatório de agendamentos"""
+    # Filtros opcionais de periodo.
     data_inicio = request.args.get('data_inicio')
     data_fim = request.args.get('data_fim')
     
+    # Monta consulta conforme o periodo informado.
     query = Agendamento.query
     
     if data_inicio:
@@ -45,9 +47,11 @@ def agendamentos():
 @login_required
 def vendas():
     """Relatório de vendas"""
+    # Filtros opcionais de periodo.
     data_inicio = request.args.get('data_inicio')
     data_fim = request.args.get('data_fim')
     
+    # Monta consulta de vendas conforme periodo.
     query = Venda.query
     
     if data_inicio:
@@ -59,6 +63,7 @@ def vendas():
         query = query.filter(func.date(Venda.data) <= data_fim)
     
     vendas = query.order_by(Venda.data.desc()).all()
+    # Soma o valor total das vendas filtradas.
     total = sum(v.valor_total for v in vendas)
     
     return render_template('painel/relatorios/vendas.html',
@@ -72,6 +77,7 @@ def vendas():
 @login_required
 def comissoes():
     """Relatório de comissões de funcionários"""
+    # Filtros opcionais de periodo.
     data_inicio = request.args.get('data_inicio')
     data_fim = request.args.get('data_fim')
     
@@ -87,7 +93,7 @@ def comissoes():
     
     agendamentos = query.all()
     
-    # Calcular comissões por funcionário
+    # Agrupa comissoes por funcionario.
     comissoes = {}
     for agendamento in agendamentos:
         funcionario_id = agendamento.funcionario_id
@@ -113,11 +119,13 @@ def comissoes():
 @login_required
 def financeiro():
     """Relatório financeiro"""
+    # Filtros opcionais de periodo.
     data_inicio = request.args.get('data_inicio')
     data_fim = request.args.get('data_fim')
     
     hoje = datetime.now().date()
     
+    # Consultas separadas para entradas e saidas.
     query_receber = ContaReceber.query
     query_pagar = ContaPagar.query
     
@@ -134,6 +142,7 @@ def financeiro():
     contas_receber = query_receber.all()
     contas_pagar = query_pagar.all()
     
+    # Lucro simples: recebido pago menos despesa paga.
     total_receber = sum(c.valor for c in contas_receber if c.pago == 'Sim')
     total_pagar = sum(c.valor for c in contas_pagar if c.pago == 'Sim')
     lucro = total_receber - total_pagar
@@ -152,6 +161,7 @@ def financeiro():
 @login_required
 def clientes():
     """Relatório de clientes"""
+    # Relatorio simples com clientes mais recentes primeiro.
     clientes = Cliente.query.order_by(Cliente.data_cad.desc()).all()
     total_clientes = len(clientes)
     

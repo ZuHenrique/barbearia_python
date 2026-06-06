@@ -12,6 +12,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 def get_servicos():
     """GET lista de serviços"""
     try:
+        # Retorna somente servicos liberados ao publico.
         servicos = Servico.query.filter_by(ativo='Sim').all()
         return jsonify({
             'status': 'success',
@@ -31,6 +32,7 @@ def get_servicos():
 def get_funcionarios():
     """GET lista de funcionários com atendimento"""
     try:
+        # Lista apenas profissionais ativos que atendem clientes.
         funcionarios = Usuario.query.filter_by(atendimento='Sim', ativo='Sim').all()
         return jsonify({
             'status': 'success',
@@ -49,6 +51,7 @@ def get_funcionarios():
 def get_horarios(funcionario_id, data_str):
     """GET horários disponíveis de um funcionário em uma data"""
     try:
+        # Converte a data recebida na URL para objeto date.
         data = datetime.strptime(data_str, '%Y-%m-%d').date()
         
         # Pegar todos os horários do funcionário
@@ -63,6 +66,7 @@ def get_horarios(funcionario_id, data_str):
             ]
         else:
             # Pegar agendamentos do dia para filtrar ocupados
+            # Remove da lista os horarios ja ocupados no dia.
             agendamentos_dia = Agendamento.query.filter(
                 and_(
                     Agendamento.data == data,
@@ -97,15 +101,18 @@ def get_horarios(funcionario_id, data_str):
 def criar_agendamento():
     """POST criar agendamento"""
     try:
+        # Dados chegam em JSON pelo formulario publico/agendamento.
         dados = request.get_json()
         
         # Validar dados
+        # Garante que o minimo necessario foi enviado.
         campos_obrigatorios = ['nome', 'telefone', 'funcionario_id', 'servico_id', 'data', 'hora']
         for campo in campos_obrigatorios:
             if campo not in dados:
                 return jsonify({'status': 'error', 'message': f'{campo} é obrigatório'}), 400
         
         # Validar horário disponível
+        # Valida data e horario antes de gravar.
         data = datetime.strptime(dados['data'], '%Y-%m-%d').date()
         hora = datetime.strptime(dados['hora'], '%H:%M').time()
         
@@ -124,6 +131,7 @@ def criar_agendamento():
             return jsonify({'status': 'error', 'message': 'Este horário não está disponível!'}), 400
         
         # Buscar ou criar cliente
+        # Reaproveita cliente pelo telefone; se nao existir, cria um novo.
         cliente = Cliente.query.filter_by(telefone=dados['telefone']).first()
         if not cliente:
             cliente = Cliente(
@@ -135,9 +143,11 @@ def criar_agendamento():
             db.session.flush()
         
         from markupsafe import escape
+        # Limpa observacao para evitar HTML injetado.
         obs_limpa = str(escape(dados.get('obs', ''))) if dados.get('obs') else None
         
         # Criar agendamento
+        # Cria o agendamento publico, sem usuario administrativo ligado.
         novo_agendamento = Agendamento(
             funcionario_id=dados['funcionario_id'],
             cliente_id=cliente.id,
@@ -172,6 +182,7 @@ def criar_agendamento():
 def verificar_cliente(telefone):
     """GET verificar se cliente existe"""
     try:
+        # Usado por telas que preenchem dados do cliente automaticamente.
         cliente = Cliente.query.filter_by(telefone=telefone).first()
         
         if cliente:
@@ -196,6 +207,7 @@ def verificar_cliente(telefone):
 @api_bp.route('/health', methods=['GET'])
 def health_check():
     """Health check da API"""
+    # Endpoint simples para monitorar se a API esta respondendo.
     return jsonify({
         'status': 'success',
         'message': 'API Barbearia PRO OK',

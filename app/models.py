@@ -6,6 +6,7 @@ from flask_login import UserMixin
 from datetime import datetime
 import hashlib
 
+# Instancia global do SQLAlchemy, inicializada em app/__init__.py.
 db = SQLAlchemy()
 
 # =====================================================
@@ -38,11 +39,13 @@ class Usuario(UserMixin, db.Model):
     
     def set_senha(self, senha):
         """Define senha com hash seguro (werkzeug)"""
+        # Gera hash seguro antes de salvar no banco.
         from werkzeug.security import generate_password_hash
         self.senha_crip = generate_password_hash(senha)
     
     def verifica_senha(self, senha):
         """Verifica se a senha está correta"""
+        # Mantem compatibilidade com senhas antigas em MD5.
         from werkzeug.security import check_password_hash
         # Fallback para MD5 antigo caso tenha usuários antigos não migrados
         if len(self.senha_crip) == 32:
@@ -57,6 +60,7 @@ class Usuario(UserMixin, db.Model):
     
     def tem_permissao(self, chave_acesso):
         """Verifica se usuário tem permissão"""
+        # Procura uma permissao ligada a chave recebida.
         from app.models import Acesso
         permissao = UsuarioPermissao.query.filter_by(
             usuario_id=self.id
@@ -64,6 +68,7 @@ class Usuario(UserMixin, db.Model):
         return permissao is not None
         
     def get_id(self):
+        # Prefixo permite diferenciar Usuario de Cliente no Flask-Login.
         return f"usuario_{self.id}"
     
     def __repr__(self):
@@ -94,6 +99,7 @@ class Cliente(UserMixin, db.Model):
     barbearia_id = db.Column(db.Integer, db.ForeignKey('barbearias.id'))
     
     def get_id(self):
+        # Prefixo permite diferenciar Cliente de Usuario no Flask-Login.
         return f"cliente_{self.id}"
         
     def set_senha(self, senha):
@@ -102,6 +108,7 @@ class Cliente(UserMixin, db.Model):
         self.senha_crip = generate_password_hash(senha)
     
     def verifica_senha(self, senha):
+        # Cliente social pode nao ter senha local cadastrada.
         if not self.senha_crip: return False
         from werkzeug.security import check_password_hash
         # Fallback para MD5 antigo
@@ -195,6 +202,7 @@ class Agendamento(db.Model):
     __tablename__ = 'agendamentos'
     
     id = db.Column(db.Integer, primary_key=True)
+    # funcionario_id e o barbeiro; usuario_id e quem criou o agendamento.
     funcionario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
     servico_id = db.Column(db.Integer, db.ForeignKey('servicos.id'), nullable=False)
@@ -271,6 +279,7 @@ class Produto(db.Model):
     categoria_id = db.Column(db.Integer, db.ForeignKey('cat_produtos.id'))
     valor_compra = db.Column(db.Float, nullable=False)
     valor_venda = db.Column(db.Float, nullable=False)
+    # estoque guarda quantidade atual; nivel_estoque dispara alerta.
     estoque = db.Column(db.Integer, default=0)
     nivel_estoque = db.Column(db.Integer, default=10)  # Nível mínimo de alerta
     foto = db.Column(db.String(255))
@@ -561,6 +570,7 @@ class Barbearia(db.Model):
     tipo = db.Column(db.String(20), default='barbearia')  # 'barbearia' ou 'barbeiro'
     # Identidade
     nome = db.Column(db.String(120), nullable=False)
+    # slug identifica a barbearia em URLs/subdominios.
     slug = db.Column(db.String(60), unique=True, nullable=False)  # subdominio: zuh, joao-silva
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha_crip = db.Column(db.String(255), nullable=False)  # Senha do DONO/PROPRIETARIO
@@ -592,15 +602,18 @@ class Barbearia(db.Model):
     servicos = db.relationship('Servico', backref='barbearia', lazy='dynamic', cascade='all, delete-orphan')
 
     def set_senha(self, senha):
+        # Senha do dono tambem fica com hash seguro.
         from werkzeug.security import generate_password_hash
         self.senha_crip = generate_password_hash(senha)
 
     def verifica_senha(self, senha):
+        # Confere senha do dono da conta SaaS.
         from werkzeug.security import check_password_hash
         return check_password_hash(self.senha_crip, senha)
 
     @property
     def em_trial(self):
+        # Trial so esta ativo enquanto a data limite nao passou.
         if self.status == 'trial' and self.trial_ate:
             return datetime.utcnow() < self.trial_ate
         return False

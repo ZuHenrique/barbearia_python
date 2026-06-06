@@ -11,6 +11,7 @@ servicos_bp = Blueprint('servicos', __name__, url_prefix='/sistema/painel/servic
 @login_required
 def listar():
     """Lista serviços"""
+    # Pagina a listagem de servicos.
     page = request.args.get('page', 1, type=int)
     servicos = Servico.query.paginate(page=page, per_page=20)
     return render_template('painel/servicos/listar.html', servicos=servicos)
@@ -22,6 +23,7 @@ def novo():
     """Criar novo serviço"""
     if request.method == 'POST':
         try:
+            # Converte valores numericos antes de salvar.
             servico = Servico(
                 nome=request.form.get('nome'),
                 categoria_id=request.form.get('categoria_id'),
@@ -39,6 +41,7 @@ def novo():
             db.session.rollback()
             flash(f'Erro ao criar serviço: {str(e)}', 'danger')
     
+    # Categorias preenchem o select do formulario.
     categorias = CategoriaServico.query.all()
     return render_template('painel/servicos/novo.html', categorias=categorias)
 
@@ -47,10 +50,12 @@ def novo():
 @login_required
 def editar(id):
     """Editar serviço"""
+    # Carrega o servico antes de editar.
     servico = Servico.query.get_or_404(id)
     
     if request.method == 'POST':
         try:
+            # Atualiza dados comerciais e visibilidade do servico.
             servico.nome = request.form.get('nome')
             servico.categoria_id = request.form.get('categoria_id')
             servico.valor = float(request.form.get('valor'))
@@ -66,6 +71,7 @@ def editar(id):
             db.session.rollback()
             flash(f'Erro ao atualizar serviço: {str(e)}', 'danger')
     
+    # Recarrega categorias para a tela de edicao.
     categorias = CategoriaServico.query.all()
     return render_template('painel/servicos/editar.html', servico=servico, categorias=categorias)
 
@@ -74,6 +80,7 @@ def editar(id):
 @login_required
 def excluir(id):
     """Excluir serviço"""
+    # Exclui o servico selecionado.
     servico = Servico.query.get_or_404(id)
     db.session.delete(servico)
     db.session.commit()

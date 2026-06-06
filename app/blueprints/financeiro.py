@@ -12,6 +12,7 @@ financeiro_bp = Blueprint('financeiro', __name__, url_prefix='/sistema/painel/fi
 @login_required
 def receber():
     """Listar contas a receber"""
+    # Lista contas a receber ordenadas pelo vencimento.
     page = request.args.get('page', 1, type=int)
     contas = ContaReceber.query.order_by(ContaReceber.data_venc).paginate(page=page, per_page=20)
     return render_template('painel/financeiro/receber.html', contas=contas, today=date.today())
@@ -23,7 +24,9 @@ def receber_novo():
     """Criar conta a receber"""
     if request.method == 'POST':
         try:
+            # Converte vencimento do formulario para date.
             data_venc = datetime.strptime(request.form.get('data_venc'), '%Y-%m-%d').date()
+            # Toda nova conta comeca como nao paga.
             conta = ContaReceber(
                 descricao=request.form.get('descricao'),
                 valor=float(request.form.get('valor')),
@@ -46,6 +49,7 @@ def receber_novo():
 @login_required
 def pagar():
     """Listar contas a pagar"""
+    # Lista despesas cadastradas.
     page = request.args.get('page', 1, type=int)
     contas = ContaPagar.query.paginate(page=page, per_page=20)
     return render_template('painel/financeiro/pagar.html', contas=contas)
@@ -57,7 +61,9 @@ def pagar_novo():
     """Criar conta a pagar"""
     if request.method == 'POST':
         try:
+            # Converte vencimento do formulario para date.
             data_venc = datetime.strptime(request.form.get('data_venc'), '%Y-%m-%d').date()
+            # Toda nova despesa comeca como nao paga.
             conta = ContaPagar(
                 descricao=request.form.get('descricao'),
                 valor=float(request.form.get('valor')),
@@ -73,6 +79,7 @@ def pagar_novo():
             db.session.rollback()
             flash(f'Erro: {str(e)}', 'danger')
     
+    # Fornecedores preenchem o select da despesa.
     fornecedores = Fornecedor.query.all()
     return render_template('painel/financeiro/pagar-novo.html', fornecedores=fornecedores)
 
@@ -81,6 +88,7 @@ def pagar_novo():
 @login_required
 def receber_pagar(id):
     """Marcar conta a receber como paga"""
+    # Registra baixa de uma receita.
     conta = ContaReceber.query.get_or_404(id)
     conta.pago = 'Sim'
     conta.data_pgto = datetime.now().date()
@@ -93,6 +101,7 @@ def receber_pagar(id):
 @login_required
 def pagar_pagar(id):
     """Marcar conta a pagar como paga"""
+    # Registra baixa de uma despesa.
     conta = ContaPagar.query.get_or_404(id)
     conta.pago = 'Sim'
     conta.data_pgto = datetime.now().date()

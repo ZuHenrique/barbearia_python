@@ -13,10 +13,12 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/sistema')
 @auth_bp.route('/login/', methods=['GET', 'POST'])
 def login():
     """Página de login"""
+    # Usuario ja logado nao precisa ver a tela de login.
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     
     if request.method == 'POST':
+        # Captura credenciais enviadas pelo formulario.
         email = request.form.get('email')
         senha = request.form.get('senha')
         
@@ -25,6 +27,7 @@ def login():
             return redirect(url_for('auth.login'))
         
         # Buscar usuário por email ou CPF
+        # Permite login usando email ou CPF no mesmo campo.
         usuario = Usuario.query.filter(
             (Usuario.email == email) | (Usuario.cpf == email)
         ).first()
@@ -34,11 +37,13 @@ def login():
                 flash('Seu usuário foi desativado, contate o administrador!', 'danger')
                 return redirect(url_for('auth.login'))
             
+            # Registra usuario na sessao do Flask-Login.
             login_user(usuario)
             session['id'] = usuario.id
             session['nivel'] = usuario.nivel
             session['nome'] = usuario.nome
             
+            # Volta para a pagina solicitada antes do login, se existir.
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('dashboard.index'))
         else:
@@ -61,6 +66,7 @@ def logout():
 def recuperar_senha():
     """Recuperação de senha"""
     if request.method == 'POST':
+        # Resposta igual para email existente ou nao evita enumeracao de usuarios.
         email = request.form.get('email')
         usuario = Usuario.query.filter_by(email=email).first()
         
@@ -84,6 +90,7 @@ def perfil():
 @login_required
 def editar_perfil():
     """Edita perfil do usuário"""
+    # Atualiza apenas campos enviados no formulario.
     nome = request.form.get('nome')
     email = request.form.get('email')
     telefone = request.form.get('telefone')
@@ -108,6 +115,7 @@ def editar_perfil():
 @login_required
 def alterar_senha():
     """Altera a senha do usuário"""
+    # Confere senha atual antes de aceitar uma nova.
     senha_atual = request.form.get('senha_atual')
     senha_nova = request.form.get('senha_nova')
     senha_confirmacao = request.form.get('senha_confirmacao')
@@ -122,6 +130,7 @@ def alterar_senha():
         flash('As novas senhas não conferem', 'danger')
         return redirect(url_for('auth.perfil'))
     
+    # Salva a nova senha usando o hash definido no modelo Usuario.
     usuario.set_senha(senha_nova)
     db.session.commit()
     flash('Senha alterada com sucesso!', 'success')
