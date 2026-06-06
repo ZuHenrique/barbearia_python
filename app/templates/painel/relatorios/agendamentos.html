@@ -1,0 +1,82 @@
+{% extends "painel/base.html" %}
+{% block title %}Relatório de Agendamentos{% endblock %}
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="fas fa-calendar-check me-2 text-primary"></i>Relatório de Agendamentos</h3>
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-outline-secondary rounded-pill">← Relatórios</a>
+</div>
+
+<!-- Filtro -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Data Início</label>
+                <input type="date" name="data_inicio" class="form-control" value="{{ data_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Data Fim</label>
+                <input type="date" name="data_fim" class="form-control" value="{{ data_fim }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumo -->
+{% set concluidos = agendamentos | selectattr('status','equalto','Concluido') | list %}
+{% set cancelados = agendamentos | selectattr('status','equalto','Cancelado') | list %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-primary">{{ agendamentos|length }}</div><small class="text-muted">Total</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-success">{{ concluidos|length }}</div><small class="text-muted">Concluídos</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-danger">{{ cancelados|length }}</div><small class="text-muted">Cancelados</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-warning">{{ agendamentos|length - concluidos|length - cancelados|length }}</div><small class="text-muted">Pendentes</small></div></div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        {% if agendamentos %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Data</th>
+                        <th>Hora</th>
+                        <th>Cliente</th>
+                        <th>Profissional</th>
+                        <th>Serviço</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ag in agendamentos %}
+                    <tr>
+                        <td class="ps-3">{{ ag.data.strftime('%d/%m/%Y') }}</td>
+                        <td>{% if ag.hora is string %}{{ ag.hora[:5] }}{% else %}{{ ag.hora.strftime('%H:%M') }}{% endif %}</td>
+                        <td>{{ ag.cliente.nome if ag.cliente else '—' }}</td>
+                        <td>{{ ag.funcionario.nome if ag.funcionario else '—' }}</td>
+                        <td>{{ ag.servico.nome if ag.servico else '—' }}</td>
+                        <td class="text-success fw-semibold">R$ {{ "%.2f"|format(ag.servico.valor) if ag.servico else '—' }}</td>
+                        <td>
+                            {% if ag.status == 'Concluido' %}<span class="badge bg-success">Concluído</span>
+                            {% elif ag.status == 'Cancelado' %}<span class="badge bg-danger">Cancelado</span>
+                            {% elif ag.status == 'Confirmado' %}<span class="badge bg-info">Confirmado</span>
+                            {% else %}<span class="badge bg-warning text-dark">Agendado</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-search fa-3x mb-3"></i>
+            <h5>Nenhum agendamento encontrado</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

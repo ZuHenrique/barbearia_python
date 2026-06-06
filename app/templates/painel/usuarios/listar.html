@@ -1,0 +1,409 @@
+{% extends "painel/base.html" %}
+{% block title %}Usuários & Profissionais - BARBEARIA ZUH{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── variáveis ─────────────────────────────────────────── */
+  :root {
+    --adm:  #7c3aed;
+    --bar:  #059669;
+    --ger:  #0284c7;
+    --rec:  #d97706;
+    --def:  #374151;
+  }
+
+  /* ── hero header ────────────────────────────────────────── */
+  .usr-hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    border-radius: 20px;
+    padding: 32px 36px;
+    color: #fff;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 8px 32px rgba(76,29,149,.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .usr-hero::before {
+    content:'';
+    position:absolute; top:-60px; right:-60px;
+    width:220px; height:220px;
+    border-radius:50%;
+    background:rgba(255,255,255,.06);
+  }
+  .usr-hero::after {
+    content:'';
+    position:absolute; bottom:-80px; right:120px;
+    width:160px; height:160px;
+    border-radius:50%;
+    background:rgba(255,255,255,.04);
+  }
+  .usr-hero-title { font-size:1.7rem; font-weight:800; letter-spacing:-.5px; }
+  .usr-hero-sub   { font-size:.9rem; opacity:.7; margin-top:4px; }
+  .btn-novo {
+    background: linear-gradient(135deg,#a78bfa,#7c3aed);
+    color:#fff; border:none;
+    padding: 11px 26px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: .9rem;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 15px rgba(124,58,237,.5);
+    transition: transform .2s, box-shadow .2s;
+    white-space: nowrap;
+    position: relative; z-index:1;
+  }
+  .btn-novo:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(124,58,237,.6); color:#fff; }
+
+  /* ── stat cards ──────────────────────────────────────────── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  @media(max-width:640px){
+    .stat-grid { grid-template-columns: repeat(2,1fr); gap:10px; }
+    .usr-hero { flex-direction:column; align-items:flex-start; gap:14px; padding:22px 20px; }
+    .usr-hero-title { font-size:1.3rem; }
+    .btn-novo { width:100%; justify-content:center; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .filter-bar { gap:8px; }
+  }
+  @media(max-width:768px){
+    .stat-grid { grid-template-columns: repeat(2,1fr); }
+  }
+
+
+  .stat-card {
+    background:#fff;
+    border-radius:16px;
+    padding: 20px 22px;
+    display:flex; align-items:center; gap:16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.1); }
+  .stat-icon {
+    width:52px; height:52px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; flex-shrink:0;
+  }
+  .stat-val  { font-size:1.8rem; font-weight:800; line-height:1; }
+  .stat-lbl  { font-size:.78rem; color:#6b7280; margin-top:2px; }
+
+  /* ── filtro / busca ──────────────────────────────────────── */
+  .filter-bar {
+    background:#fff; border-radius:14px; padding:16px 20px;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    margin-bottom:24px;
+  }
+  .filter-bar input, .filter-bar select {
+    border:1px solid #e5e7eb; border-radius:10px;
+    padding:8px 14px; font-size:.88rem;
+    outline:none; transition:border-color .2s;
+    background:#f9fafb;
+  }
+  .filter-bar input:focus, .filter-bar select:focus { border-color:#7c3aed; background:#fff; }
+  .filter-bar input { flex:1; min-width:180px; }
+
+  /* ── user cards grid ─────────────────────────────────────── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .usr-card {
+    background:#fff;
+    border-radius:20px;
+    box-shadow:0 3px 16px rgba(0,0,0,.07);
+    transition:transform .25s, box-shadow .25s;
+    position:relative;
+  }
+  .usr-card:hover { transform:translateY(-5px); box-shadow:0 12px 32px rgba(0,0,0,.13); }
+
+  .usr-card-banner {
+    height:56px;
+    position:relative;
+    border-radius:20px 20px 0 0;
+    overflow:hidden;
+  }
+  .usr-card-avatar {
+    position:absolute; top:30px; left:16px;
+    width:44px; height:44px; border-radius:50%;
+    border:3px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem; font-weight:800; color:#fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,.25);
+    z-index:2;
+  }
+  .usr-card-status-dot {
+    position:absolute; top:56px; left:46px;
+    width:12px; height:12px; border-radius:50%;
+    border:2px solid #fff;
+    z-index:3;
+  }
+  .dot-ativo   { background:#10b981; }
+  .dot-inativo { background:#ef4444; }
+
+  .usr-card-body { padding:32px 16px 12px; }
+  .usr-card-name { font-size:.93rem; font-weight:700; color:#111827; }
+  .usr-card-cpf  { font-size:.74rem; color:#9ca3af; margin-top:1px; }
+
+  .usr-card-info {
+    margin-top:10px; display:flex; flex-direction:column; gap:4px;
+  }
+  .usr-info-row {
+    display:flex; align-items:center; gap:7px;
+    font-size:.78rem; color:#4b5563;
+  }
+  .usr-info-row i { width:14px; text-align:center; color:#a78bfa; flex-shrink:0; font-size:.75rem; }
+
+  .usr-card-footer {
+    border-top:1px solid #f3f4f6;
+    padding:10px 16px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px;
+  }
+
+  /* badges de nível */
+  .nivel-badge {
+    padding:4px 12px; border-radius:20px;
+    font-size:.73rem; font-weight:700; letter-spacing:.3px;
+  }
+  .nivel-Administrador { background:#f3e8ff; color:#7c3aed; }
+  .nivel-Gerente       { background:#e0f2fe; color:#0284c7; }
+  .nivel-Barbeiro      { background:#d1fae5; color:#059669; }
+  .nivel-Recepcionista { background:#fef3c7; color:#d97706; }
+
+  /* badge atendimento */
+  .atend-badge {
+    display:flex; align-items:center; gap:4px;
+    font-size:.73rem; font-weight:600;
+  }
+  .atend-sim { color:#059669; }
+  .atend-nao { color:#9ca3af; }
+
+  /* botões ação */
+  .btn-act {
+    width:32px; height:32px; border-radius:8px;
+    border:none; display:flex; align-items:center; justify-content:center;
+    font-size:.8rem; cursor:pointer; transition:all .2s;
+  }
+  .btn-edit { background:#fef3c7; color:#d97706; }
+  .btn-edit:hover { background:#d97706; color:#fff; }
+  .btn-del  { background:#fee2e2; color:#dc2626; }
+  .btn-del:hover  { background:#dc2626; color:#fff; }
+
+  /* empty state */
+  .empty-state {
+    text-align:center; padding:60px 20px;
+    grid-column: 1/-1;
+  }
+  .empty-icon {
+    width:80px; height:80px; border-radius:50%;
+    background:linear-gradient(135deg,#f3e8ff,#e0e7ff);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 20px; font-size:2rem; color:#7c3aed;
+  }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+
+{% set adm    = usuarios.items | selectattr('nivel','equalto','Administrador')  | list | length %}
+{% set bar    = usuarios.items | selectattr('nivel','equalto','Barbeiro')        | list | length %}
+{% set ger    = usuarios.items | selectattr('nivel','equalto','Gerente')         | list | length %}
+{% set ativos = usuarios.items | selectattr('ativo','equalto','Sim')             | list | length %}
+
+<!-- ── Hero ──────────────────────────────────────────────── -->
+<div class="usr-hero">
+  <div>
+    <div class="usr-hero-title">
+      <i class="fas fa-user-tie me-2" style="opacity:.8;"></i>Usuários &amp; Profissionais
+    </div>
+    <div class="usr-hero-sub">Gerencie a equipe e as permissões de acesso</div>
+  </div>
+  <a href="{{ url_for('usuarios.novo') }}" class="btn-novo">
+    <i class="fas fa-plus"></i> Novo Usuário
+  </a>
+</div>
+
+<!-- ── Stats ─────────────────────────────────────────────── -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
+      <i class="fas fa-users" style="color:#7c3aed;"></i>
+    </div>
+    <div>
+      <div class="stat-val" style="color:#7c3aed;">{{ usuarios.total }}</div>
+      <div class="stat-lbl">Total de Usuários</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);">
+      <i class="fas fa-check-circle" style="color:#059669;"></i>
+    </div>
+    <div>
+      <div class="stat-val" style="color:#059669;">{{ ativos }}</div>
+      <div class="stat-lbl">Usuários Ativos</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);">
+      <i class="fas fa-crown" style="color:#7c3aed;"></i>
+    </div>
+    <div>
+      <div class="stat-val" style="color:#7c3aed;">{{ adm }}</div>
+      <div class="stat-lbl">Administradores</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);">
+      <i class="fas fa-cut" style="color:#059669;"></i>
+    </div>
+    <div>
+      <div class="stat-val" style="color:#059669;">{{ bar }}</div>
+      <div class="stat-lbl">Barbeiros</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Filtro ─────────────────────────────────────────────── -->
+<div class="filter-bar">
+  <i class="fas fa-search" style="color:#9ca3af;"></i>
+  <input type="text" id="searchInput" placeholder="Buscar por nome, email ou CPF…">
+  <select id="filterNivel" onchange="filterCards()">
+    <option value="">Todos os níveis</option>
+    <option value="Administrador">Administrador</option>
+    <option value="Gerente">Gerente</option>
+    <option value="Barbeiro">Barbeiro</option>
+    <option value="Recepcionista">Recepcionista</option>
+  </select>
+  <select id="filterAtivo" onchange="filterCards()">
+    <option value="">Qualquer status</option>
+    <option value="Sim">Ativos</option>
+    <option value="Não">Inativos</option>
+  </select>
+</div>
+
+<!-- ── Cards Grid ─────────────────────────────────────────── -->
+<div class="cards-grid" id="cardsGrid">
+
+  {% if usuarios.items %}
+    {% for u in usuarios.items %}
+    {% set palettes = {
+      'Administrador': ('#7c3aed','#4c1d95'),
+      'Gerente':       ('#0284c7','#075985'),
+      'Barbeiro':      ('#059669','#064e3b'),
+      'Recepcionista': ('#d97706','#92400e')
+    } %}
+    {% set pal = palettes.get(u.nivel, ('#374151','#111827')) %}
+
+    <div class="usr-card"
+         data-nome="{{ u.nome|lower }}"
+         data-email="{{ u.email|lower }}"
+         data-cpf="{{ u.cpf or '' }}"
+         data-nivel="{{ u.nivel }}"
+         data-ativo="{{ u.ativo }}">
+
+      <!-- banner colorido -->
+      <div class="usr-card-banner"
+           style="background:linear-gradient(135deg,{{ pal[0] }},{{ pal[1] }});"></div>
+
+      <!-- avatar -->
+      <div class="usr-card-avatar" style="background:{{ pal[0] }};">
+        {{ u.nome[0].upper() }}
+      </div>
+      <!-- dot status -->
+      <div class="usr-card-status-dot {% if u.ativo == 'Sim' %}dot-ativo{% else %}dot-inativo{% endif %}"></div>
+
+      <div class="usr-card-body">
+        <div class="usr-card-name">{{ u.nome }}</div>
+        <div class="usr-card-cpf">CPF: {{ u.cpf or '—' }}</div>
+
+        <div class="usr-card-info">
+          <div class="usr-info-row">
+            <i class="fas fa-envelope"></i>
+            <span>{{ u.email }}</span>
+          </div>
+          {% if u.telefone %}
+          <div class="usr-info-row">
+            <i class="fas fa-phone"></i>
+            <span>{{ u.telefone }}</span>
+          </div>
+          {% endif %}
+          <div class="usr-info-row">
+            <i class="fas fa-calendar-check"></i>
+            <span>{% if u.ativo == 'Sim' %}Usuário ativo{% else %}Usuário inativo{% endif %}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="usr-card-footer">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="nivel-badge nivel-{{ u.nivel }}">{{ u.nivel }}</span>
+          {% if u.atendimento == 'Sim' %}
+          <span class="atend-badge atend-sim"><i class="fas fa-scissors"></i> Atende</span>
+          {% else %}
+          <span class="atend-badge atend-nao"><i class="fas fa-ban"></i> Não atende</span>
+          {% endif %}
+        </div>
+
+        <div style="display:flex;gap:6px;">
+          <a href="{{ url_for('usuarios.editar', id=u.id) }}" class="btn-act btn-edit" title="Editar">
+            <i class="fas fa-pen"></i>
+          </a>
+          {% if u.id != current_user.get_id()|replace('usuario_','')|int %}
+          <form method="POST" action="{{ url_for('usuarios.excluir', id=u.id) }}"
+                onsubmit="return confirm('Excluir {{ u.nome }}?')" style="margin:0;">
+            <button type="submit" class="btn-act btn-del" title="Excluir">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon"><i class="fas fa-users"></i></div>
+    <h5 style="color:#374151;font-weight:700;">Nenhum usuário cadastrado</h5>
+    <p style="color:#9ca3af;font-size:.9rem;">Adicione o primeiro profissional da equipe!</p>
+    <a href="{{ url_for('usuarios.novo') }}" class="btn-novo" style="display:inline-flex;margin-top:12px;">
+      <i class="fas fa-plus"></i> Cadastrar Usuário
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('input', filterCards);
+
+function filterCards() {
+  const q      = document.getElementById('searchInput').value.toLowerCase();
+  const nivel  = document.getElementById('filterNivel').value;
+  const ativo  = document.getElementById('filterAtivo').value;
+
+  document.querySelectorAll('.usr-card').forEach(card => {
+    const matchQ = !q ||
+      card.dataset.nome.includes(q) ||
+      card.dataset.email.includes(q) ||
+      card.dataset.cpf.includes(q);
+    const matchN = !nivel || card.dataset.nivel === nivel;
+    const matchA = !ativo || card.dataset.ativo === ativo;
+    card.style.display = (matchQ && matchN && matchA) ? '' : 'none';
+  });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "painel/base.html" %}
+{% block title %}{{ cliente.nome }} - Perfil{% endblock %}
+
+{% block extra_css %}
+<style>
+    .perfil-header { background:linear-gradient(135deg,#1a1a2e,#0f3460); border-radius:20px; padding:35px; color:white; }
+    .avatar-lg { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#e94560,#c4122f); color:white; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:700; flex-shrink:0; border:4px solid rgba(255,255,255,.2); }
+    .info-card { border:none; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.07); }
+    .fidelidade-bar { height:12px; border-radius:6px; background:#e5e7eb; overflow:hidden; }
+    .fidelidade-fill { height:100%; background:linear-gradient(135deg,#f59e0b,#fbbf24); border-radius:6px; transition:width .5s; }
+    .stat-mini { text-align:center; padding:16px; border-radius:12px; }
+    .hora-ag { font-size:1.1rem; font-weight:700; color:#0f3460; }
+    .badge-status-ag { font-size:.75rem; padding:3px 10px; border-radius:20px; font-weight:600; }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+<!-- Cabeçalho do perfil -->
+<div class="perfil-header mb-4">
+    <div class="d-flex align-items-center gap-4 mb-3">
+        <div class="avatar-lg">{{ cliente.nome[0].upper() }}</div>
+        <div class="flex-grow-1">
+            <h2 class="mb-1 fw-bold">{{ cliente.nome }}</h2>
+            <div class="d-flex flex-wrap gap-3 text-white-50">
+                {% if cliente.telefone %}
+                <span><i class="fas fa-phone me-1"></i>{{ cliente.telefone }}</span>
+                {% endif %}
+                {% if cliente.email %}
+                <span><i class="fas fa-envelope me-1"></i>{{ cliente.email }}</span>
+                {% endif %}
+                {% if cliente.data_cad %}
+                <span><i class="fas fa-calendar me-1"></i>Cliente desde {{ cliente.data_cad.strftime('%d/%m/%Y') }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('clientes.editar', id=cliente.id) }}" class="btn btn-outline-light rounded-pill px-4">
+                <i class="fas fa-edit me-1"></i> Editar
+            </a>
+            <a href="{{ url_for('clientes.listar') }}" class="btn btn-outline-light rounded-pill px-4">
+                ← Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Fidelidade -->
+    {% set fidelidade_max = 10 %}
+    {% set pontos = cliente.cartoes or 0 %}
+    {% set pct = [(pontos % fidelidade_max) * 10, 100] | min %}
+    <div class="mt-3">
+        <div class="d-flex justify-content-between mb-1">
+            <span class="small"><i class="fas fa-star text-warning me-1"></i>Cartão Fidelidade — {{ pontos }} pontos acumulados</span>
+            <span class="small text-white-50">{{ pontos % fidelidade_max }}/{{ fidelidade_max }} para próximo prêmio</span>
+        </div>
+        <div class="fidelidade-bar">
+            <div class="fidelidade-fill" style="width:{{ pct }}%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Informações pessoais -->
+    <div class="col-md-4">
+        <div class="card info-card h-100">
+            <div class="card-header border-0 bg-transparent pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-id-card me-2 text-primary"></i>Dados do Cliente</h5>
+            </div>
+            <div class="card-body px-4">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted small">Nome</td>
+                        <td class="fw-semibold">{{ cliente.nome }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Telefone</td>
+                        <td>
+                            <a href="https://wa.me/55{{ cliente.telefone | replace('(','') | replace(')','') | replace(' ','') | replace('-','') }}" target="_blank" class="text-success text-decoration-none fw-semibold">
+                                <i class="fab fa-whatsapp me-1"></i>{{ cliente.telefone }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Email</td>
+                        <td>{{ cliente.email or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Endereço</td>
+                        <td>{{ cliente.endereco or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Nascimento</td>
+                        <td>{{ cliente.data_nasc.strftime('%d/%m/%Y') if cliente.data_nasc else '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Alertas</td>
+                        <td>{{ cliente.alertado or 'Não' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Pontos</td>
+                        <td><span class="fw-bold text-warning"><i class="fas fa-star me-1"></i>{{ cliente.cartoes or 0 }}</span></td>
+                    </tr>
+                </table>
+
+                <!-- Ação rápida: WhatsApp -->
+                <div class="mt-4">
+                    <a href="https://wa.me/55{{ cliente.telefone | replace('(','') | replace(')','') | replace(' ','') | replace('-','') }}?text=Olá {{ cliente.nome }}! Aqui é da BARBEARIA ZUH."
+                       target="_blank" class="btn btn-success w-100 rounded-pill">
+                        <i class="fab fa-whatsapp me-2"></i>Enviar WhatsApp
+                    </a>
+                </div>
+                <div class="mt-2">
+                    <a href="{{ url_for('agendamentos.novo') }}?cliente_id={{ cliente.id }}" class="btn btn-primary w-100 rounded-pill">
+                        <i class="fas fa-calendar-plus me-2"></i>Novo Agendamento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de agendamentos -->
+    <div class="col-md-8">
+        <div class="card info-card">
+            <div class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between">
+                <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-primary"></i>Histórico de Atendimentos</h5>
+                <span class="badge bg-primary rounded-pill">{{ agendamentos|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if agendamentos %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Data</th>
+                                <th>Hora</th>
+                                <th>Profissional</th>
+                                <th>Serviço</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ag in agendamentos %}
+                            <tr>
+                                <td class="ps-4">{{ ag.data.strftime('%d/%m/%Y') }}</td>
+                                <td class="hora-ag">{% if ag.hora is string %}{{ ag.hora[:5] }}{% else %}{{ ag.hora.strftime('%H:%M') }}{% endif %}</td>
+                                <td>{{ ag.funcionario.nome if ag.funcionario else '—' }}</td>
+                                <td>{{ ag.servico.nome if ag.servico else '—' }}</td>
+                                <td class="text-success fw-semibold">R$ {{ "%.2f"|format(ag.servico.valor) if ag.servico else '—' }}</td>
+                                <td>
+                                    {% if ag.status == 'Concluido' %}<span class="badge-status-ag" style="background:#d1fae5;color:#065f46">✅ Concluído</span>
+                                    {% elif ag.status == 'Cancelado' %}<span class="badge-status-ag" style="background:#fee2e2;color:#991b1b">❌ Cancelado</span>
+                                    {% elif ag.status == 'Confirmado' %}<span class="badge-status-ag" style="background:#dbeafe;color:#1e40af">✅ Confirmado</span>
+                                    {% else %}<span class="badge-status-ag" style="background:#fef3c7;color:#92400e">⏳ Agendado</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                    <p>Nenhum atendimento registrado ainda.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "painel/base.html" %}
+{% block title %}Serviços - BARBEARIA ZUH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-srv { border:none; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.07); }
+    .srv-row:hover { background:#f8faff; }
+    .srv-icon { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,#0f3460,#e94560); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem; flex-shrink:0; }
+    .badge-ativo   { background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:700; }
+    .badge-inativo { background:#fee2e2; color:#991b1b; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:700; }
+    .valor-badge   { font-size:1.05rem; font-weight:700; color:#065f46; }
+    .comissao-badge { font-size:.85rem; color:#0369a1; }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="fas fa-cut me-2 text-primary"></i>Serviços</h3>
+    <a href="{{ url_for('servicos.novo') }}" class="btn btn-primary rounded-pill px-4">
+        <i class="fas fa-plus me-1"></i> Novo Serviço
+    </a>
+</div>
+
+<!-- Resumo -->
+{% set ativos = servicos.items | selectattr('ativo','equalto','Sim') | list %}
+{% set inativos = servicos.items | selectattr('ativo','equalto','Não') | list %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-primary mb-0">{{ servicos.total }}</div><small class="text-muted">Total</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-success mb-0">{{ ativos|length }}</div><small class="text-muted">Ativos</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-danger mb-0">{{ inativos|length }}</div><small class="text-muted">Inativos</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-info mb-0">R$ {{ "%.0f"|format(servicos.items | map(attribute='valor') | sum) }}</div><small class="text-muted">Soma valores</small></div></div>
+</div>
+
+<div class="card card-srv">
+    <div class="card-body p-0">
+        {% if servicos.items %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Serviço</th>
+                        <th>Categoria</th>
+                        <th>Valor</th>
+                        <th>Comissão</th>
+                        <th class="text-center">Retorno (dias)</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in servicos.items %}
+                    <tr class="srv-row">
+                        <td class="ps-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="srv-icon"><i class="fas fa-scissors"></i></div>
+                                <div>
+                                    <div class="fw-semibold">{{ s.nome }}</div>
+                                    {% if s.descricao %}<small class="text-muted">{{ s.descricao[:45] }}{% if s.descricao|length > 45 %}…{% endif %}</small>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if s.categoria %}
+                            <span class="badge bg-secondary bg-opacity-75">{{ s.categoria.nome }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="valor-badge">R$ {{ "%.2f"|format(s.valor) }}</span></td>
+                        <td>
+                            {% if s.valor_comissao > 0 %}
+                            <span class="comissao-badge">💰 R$ {{ "%.2f"|format(s.valor_comissao) }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">{{ s.dias_retorno or 30 }}d</span>
+                        </td>
+                        <td class="text-center">
+                            {% if s.ativo == 'Sim' %}
+                            <span class="badge-ativo">● Ativo</span>
+                            {% else %}
+                            <span class="badge-inativo">● Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{{ url_for('servicos.editar', id=s.id) }}" class="btn btn-sm btn-outline-warning rounded-pill px-3" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('servicos.excluir', id=s.id) }}"
+                                      onsubmit="return confirm('Excluir o serviço {{ s.nome }}?')">
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-cut fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum serviço cadastrado</h5>
+            <a href="{{ url_for('servicos.novo') }}" class="btn btn-primary mt-2 rounded-pill px-4">
+                <i class="fas fa-plus me-1"></i> Cadastrar Primeiro Serviço
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "painel/base.html" %}
+{% block title %}Relatório de Vendas{% endblock %}
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="fas fa-shopping-bag me-2 text-danger"></i>Relatório de Vendas</h3>
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-outline-secondary rounded-pill">← Relatórios</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Data Início</label>
+                <input type="date" name="data_inicio" class="form-control" value="{{ data_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Data Fim</label>
+                <input type="date" name="data_fim" class="form-control" value="{{ data_fim }}">
+            </div>
+            <div class="col-md-4"><button type="submit" class="btn btn-danger w-100">Filtrar</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+            <div class="h3 fw-bold text-success">R$ {{ "%.2f"|format(total) }}</div>
+            <small class="text-muted">Total em Vendas</small>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+            <div class="h3 fw-bold text-primary">{{ vendas|length }}</div>
+            <small class="text-muted">Transações</small>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        {% if vendas %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Data</th>
+                        <th>Produto</th>
+                        <th>Cliente</th>
+                        <th>Qtd</th>
+                        <th>Valor Unit.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vendas %}
+                    <tr>
+                        <td class="ps-3">{{ v.data.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ v.produto.nome if v.produto else '—' }}</td>
+                        <td>{{ v.cliente.nome if v.cliente else '—' }}</td>
+                        <td>{{ v.quantidade }}</td>
+                        <td>R$ {{ "%.2f"|format(v.valor_unitario) }}</td>
+                        <td class="fw-bold text-success">R$ {{ "%.2f"|format(v.valor_total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-shopping-bag fa-3x mb-3"></i>
+            <h5>Nenhuma venda encontrada no período</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

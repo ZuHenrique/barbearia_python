@@ -1,0 +1,90 @@
+{% extends "painel/base.html" %}
+{% block title %}Novo Usuário - BARBEARIA ZUH{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-user-plus me-2 text-primary"></i>Novo Usuário</h3>
+    <a href="{{ url_for('usuarios.listar') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4" style="max-width:720px;">
+    <div class="card-body p-4">
+        <form method="POST">
+            <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">Dados Pessoais</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Nome Completo *</label>
+                    <input type="text" name="nome" class="form-control" required placeholder="Nome do profissional">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">CPF *</label>
+                    <input type="text" name="cpf" class="form-control" required placeholder="000.000.000-00">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Email *</label>
+                    <input type="email" name="email" class="form-control" required placeholder="email@barbearia.com">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Telefone / WhatsApp</label>
+                    <input type="tel" name="telefone" class="form-control" placeholder="(11) 99999-9999">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Chave PIX</label>
+                    <input type="text" name="chave_pix" class="form-control" placeholder="CPF, email ou telefone">
+                </div>
+            </div>
+
+            <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">Acesso e Permissões</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Nível de Acesso *</label>
+                    <select name="nivel" class="form-select" required>
+                        <option value="Barbeiro" selected>Barbeiro</option>
+                        <option value="Recepcionista">Recepcionista</option>
+                        <option value="Gerente">Gerente</option>
+                        <option value="Administrador">Administrador</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Faz Atendimento?</label>
+                    <select name="atendimento" class="form-select">
+                        <option value="Sim" selected>Sim</option>
+                        <option value="Não">Não</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Senha *</label>
+                    <input type="password" name="senha" class="form-control" required placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Confirmar Senha *</label>
+                    <input type="password" name="senha_confirm" class="form-control" required placeholder="Repita a senha">
+                </div>
+            </div>
+
+            <div class="alert alert-info py-2 mb-4" style="font-size:.875rem;">
+                <i class="fas fa-info-circle me-1"></i>
+                <strong>Níveis de acesso:</strong> Barbeiro pode ver apenas seus agendamentos. Gerente tem acesso ao painel. Administrador tem acesso total.
+            </div>
+
+            <button type="submit" class="btn btn-primary px-5 rounded-pill">
+                <i class="fas fa-save me-2"></i>Cadastrar Usuário
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Validar se senhas batem
+document.querySelector('form').addEventListener('submit', function(e) {
+    const senha = document.querySelector('[name=senha]').value;
+    const confirm = document.querySelector('[name=senha_confirm]').value;
+    if (senha !== confirm) {
+        e.preventDefault();
+        alert('As senhas não conferem!');
+    }
+});
+</script>
+{% endblock %}

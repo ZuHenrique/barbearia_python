@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conta criada com sucesso! | BarbeariaOS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c28;
+      --border: rgba(255,255,255,0.08);
+      --accent-b: #f59e0b;
+      --accent-p: #8b5cf6;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --success: #22c55e;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3rem;
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: {% if conta.tipo == 'barbeiro' %}linear-gradient(90deg, #8b5cf6, #7c3aed){% else %}linear-gradient(90deg, #f59e0b, #d97706){% endif %};
+    }
+    .icon-wrap {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: {% if conta.tipo == 'barbeiro' %}rgba(139,92,246,0.15){% else %}rgba(245,158,11,0.15){% endif %};
+      border: 2px solid {% if conta.tipo == 'barbeiro' %}rgba(139,92,246,0.4){% else %}rgba(245,158,11,0.4){% endif %};
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2rem;
+      color: {% if conta.tipo == 'barbeiro' %}#8b5cf6{% else %}#f59e0b{% endif %};
+      animation: pop .5s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: .5rem; }
+    .subtitle { color: var(--muted); font-size: .95rem; margin-bottom: 2rem; line-height: 1.6; }
+
+    .url-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .url-box .label { font-size: .75rem; color: var(--muted); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .05em; }
+    .url-box .url {
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      color: {% if conta.tipo == 'barbeiro' %}#8b5cf6{% else %}#f59e0b{% endif %};
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .trial-info {
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: .85rem;
+      color: #86efac;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    .trial-info i { font-size: 1.2rem; flex-shrink: 0; }
+
+    .steps { text-align: left; margin-bottom: 2rem; }
+    .steps h3 { font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1rem; }
+    .step {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: .75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: {% if conta.tipo == 'barbeiro' %}rgba(139,92,246,0.2){% else %}rgba(245,158,11,0.2){% endif %};
+      color: {% if conta.tipo == 'barbeiro' %}#8b5cf6{% else %}#f59e0b{% endif %};
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .step-text strong { display: block; font-size: .875rem; margin-bottom: .15rem; }
+    .step-text span { font-size: .8rem; color: var(--muted); }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: .6rem; width: 100%; padding: .9rem;
+      background: {% if conta.tipo == 'barbeiro' %}linear-gradient(135deg, #8b5cf6, #7c3aed){% else %}linear-gradient(135deg, #f59e0b, #d97706){% endif %};
+      color: {% if conta.tipo == 'barbeiro' %}#fff{% else %}#000{% endif %};
+      border: none; border-radius: 10px;
+      font-size: .95rem; font-weight: 700;
+      text-decoration: none; cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      margin-bottom: 1rem;
+    }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+      width: 100%; padding: .85rem;
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: .875rem; text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="icon-wrap">
+    {% if conta.tipo == 'barbeiro' %}<i class="fas fa-cut"></i>
+    {% else %}<i class="fas fa-store"></i>{% endif %}
+  </div>
+
+  <h1>Tudo certo! 🎉</h1>
+  <p class="subtitle">
+    {% if conta.tipo == 'barbeiro' %}
+      Seu perfil de barbeiro profissional foi criado.<br>Agora configure seu horário e comece a receber agendamentos!
+    {% else %}
+      Sua barbearia <strong>{{ conta.nome }}</strong> foi criada.<br>Configure sua equipe e comece a usar o sistema hoje mesmo!
+    {% endif %}
+  </p>
+
+  <div class="url-box">
+    <div class="label">Seu endereço exclusivo</div>
+    <div class="url">{{ conta.slug }}.barbeariaos.com.br</div>
+  </div>
+
+  <div class="trial-info">
+    <i class="fas fa-calendar-check"></i>
+    <div>
+      <strong>30 dias de trial gratuito</strong><br>
+      Experimente todas as funcionalidades sem precisar de cartão de crédito.
+    </div>
+  </div>
+
+  <div class="steps">
+    <h3>Próximos passos</h3>
+    {% if conta.tipo == 'barbeiro' %}
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <strong>Configure seus horários</strong>
+        <span>Defina seus dias e horários de atendimento</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <strong>Adicione seus serviços e preços</strong>
+        <span>Corte, degradê, barba, etc.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <strong>Compartilhe seu link</strong>
+        <span>Mande para seus clientes pelo WhatsApp e Instagram</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <strong>Cadastre seus barbeiros</strong>
+        <span>Adicione sua equipe ao sistema</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <strong>Configure os serviços</strong>
+        <span>Preços, comissões e tempo de atendimento</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <strong>Divulgue o link de agendamentos</strong>
+        <span>Seus clientes agendam online 24h por dia</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <a href="/login" class="btn-primary">
+    <i class="fas fa-arrow-right"></i>
+    Acessar meu painel agora
+  </a>
+  <a href="/" class="btn-secondary">
+    <i class="fas fa-home"></i>
+    Voltar ao início
+  </a>
+</div>
+
+</body>
+</html>

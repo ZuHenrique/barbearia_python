@@ -1,0 +1,424 @@
+{% extends "painel/base.html" %}
+{% block title %}Novo Agendamento{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card { border:none; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.07); }
+    .section-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#9ca3af; font-weight:700; margin-bottom:12px; }
+    .form-control:focus, .form-select:focus { border-color:#0f3460; box-shadow:0 0 0 .2rem rgba(15,52,96,.12); }
+    .hora-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .hora-btn { padding:8px; border:2px solid #e5e7eb; border-radius:8px; text-align:center; cursor:pointer; transition:.2s; font-weight:600; font-size:.9rem; background:white; }
+    .hora-btn:hover { border-color:#0f3460; color:#0f3460; }
+    .hora-btn.selected { border-color:#0f3460; background:#0f3460; color:white; }
+    .hora-btn.ocupado { border-color:#f87171; background:#fef2f2; color:#dc2626; cursor:not-allowed; text-decoration:line-through; font-size:.75rem; }
+    #loading-horas { display:none; }
+
+    /* ── Calendário customizado ── */
+    .cal-wrapper { border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; user-select:none; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    .cal-header  { display:flex; align-items:center; justify-content:space-between; background:#0f3460; color:#fff; padding:9px 14px; font-weight:700; font-size:.9rem; }
+    .cal-header button { background:none; border:none; color:#fff; font-size:1.2rem; cursor:pointer; padding:0 6px; line-height:1; }
+    .cal-header button:hover { opacity:.7; }
+    .cal-grid   { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; }
+    .cal-grid .day-name { padding:6px 0; font-size:.68rem; font-weight:700; color:#6b7280; background:#f9fafb; border-bottom:1px solid #e5e7eb; }
+    .cal-grid .cal-day  { padding:7px 2px; font-size:.82rem; cursor:pointer; border-radius:6px; margin:1px; transition:background .15s,color .15s; }
+    .cal-grid .cal-day:hover:not(.disabled):not(.empty) { background:#dbeafe; color:#0f3460; }
+    .cal-grid .cal-day.selected { background:#0f3460; color:#fff; font-weight:700; }
+    .cal-grid .cal-day.today:not(.selected) { border:2px solid #0f3460; color:#0f3460; font-weight:700; }
+    .cal-grid .cal-day.disabled { color:#d1d5db; cursor:not-allowed; }
+    .cal-grid .cal-day.empty    { cursor:default; }
+    .cal-selected-label { text-align:center; margin-top:6px; font-size:.82rem; color:#374151; min-height:20px; }
+    .cal-selected-label span { font-weight:700; color:#0f3460; }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-calendar-plus me-2 text-primary"></i>Novo Agendamento</h3>
+    <a href="{{ url_for('agendamentos.listar') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form method="POST" id="formAgendamento">
+            <!-- Seção 1: Cliente -->
+            <div class="card form-card mb-4 p-4">
+                <p class="section-label"><i class="fas fa-user me-1"></i>Cliente</p>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Selecionar Cliente *</label>
+                        <div class="d-flex gap-2">
+                            <select name="cliente_id" id="cliente_select" class="form-select" required>
+                                <option value="">Buscar cliente...</option>
+                                {% for c in clientes %}
+                                <option value="{{ c.id }}">{{ c.nome }} {% if c.telefone %}— {{ c.telefone }}{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-outline-success rounded-pill px-3 text-nowrap"
+                                    data-bs-toggle="modal" data-bs-target="#modalNovoCliente"
+                                    title="Cadastrar novo cliente">
+                                <i class="fas fa-user-plus me-1"></i> Novo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Novo Cliente -->
+            <div class="modal fade" id="modalNovoCliente" tabindex="-1" aria-labelledby="modalNovoClienteLabel" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden;">
+                  <div class="modal-header border-0" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#fff;padding:20px 24px;">
+                    <h5 class="modal-title fw-bold" id="modalNovoClienteLabel">
+                      <i class="fas fa-user-plus me-2 text-warning"></i>Cadastrar Novo Cliente
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body p-4">
+                    <div id="modal-alerta" class="alert d-none mb-3"></div>
+                    <div class="mb-3">
+                      <label class="form-label fw-semibold">Nome completo *</label>
+                      <input type="text" id="nc-nome" class="form-control" placeholder="Ex: João da Silva">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-semibold">Telefone / WhatsApp *</label>
+                      <input type="tel" id="nc-telefone" class="form-control" placeholder="Ex: (11) 99999-9999">
+                    </div>
+                    <div class="mb-1">
+                      <label class="form-label fw-semibold">E-mail <span class="text-muted fw-normal">(opcional)</span></label>
+                      <input type="email" id="nc-email" class="form-control" placeholder="cliente@email.com">
+                    </div>
+                  </div>
+                  <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" id="btnSalvarCliente">
+                      <i class="fas fa-check me-1"></i> Salvar Cliente
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Seção 2: Profissional, Data e Hora -->
+            <div class="card form-card mb-4 p-4">
+                <p class="section-label"><i class="fas fa-calendar me-1"></i>Profissional, Data e Hora</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Profissional *</label>
+                        <select name="funcionario_id" id="funcionario_select" class="form-select" required onchange="verificarHorarios()">
+                            <option value="">Selecione...</option>
+                            {% for f in funcionarios %}
+                            <option value="{{ f.id }}">{{ f.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Data *</label>
+                        <!-- campo hidden que guarda o valor real -->
+                        <input type="hidden" name="data" id="data_input" required>
+                        <div class="cal-wrapper">
+                            <div class="cal-header">
+                                <button type="button" id="adm-cal-prev">&#8249;</button>
+                                <span id="adm-cal-title"></span>
+                                <button type="button" id="adm-cal-next">&#8250;</button>
+                            </div>
+                            <div class="cal-grid" id="adm-cal-grid"></div>
+                        </div>
+                        <div class="cal-selected-label" id="adm-cal-label">Nenhuma data selecionada</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Horário *</label>
+                        <input type="hidden" name="hora" id="hora_hidden" required>
+                        <div id="loading-horas" class="text-muted py-2">
+                            <i class="fas fa-spinner fa-spin me-1"></i> Carregando horários disponíveis...
+                        </div>
+                        <div id="hora-grid" class="hora-grid"></div>
+                        <div id="hora-vazio" class="text-muted small py-2" style="display:none;">
+                            <i class="fas fa-calendar-times me-1"></i> Selecione um profissional e uma data para ver os horários.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção 3: Serviço e Obs -->
+            <div class="card form-card mb-4 p-4">
+                <p class="section-label"><i class="fas fa-scissors me-1"></i>Serviço</p>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Serviço *</label>
+                        <select name="servico_id" id="servico_select" class="form-select" required onchange="atualizarResumo()">
+                            <option value="">Selecione o serviço...</option>
+                            {% for s in servicos %}
+                            <option value="{{ s.id }}" data-valor="{{ s.valor }}">{{ s.nome }} — R$ {{ "%.2f"|format(s.valor) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Observações</label>
+                        <textarea name="obs" class="form-control" rows="2" placeholder="Alguma observação especial?"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold fs-5">
+                <i class="fas fa-check-circle me-2"></i>Confirmar Agendamento
+            </button>
+        </form>
+    </div>
+
+    <!-- Painel resumo -->
+    <div class="col-lg-5">
+        <div class="card form-card p-4" style="position:sticky;top:80px;background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;">
+            <h5 class="fw-bold mb-4"><i class="fas fa-receipt me-2 text-warning"></i>Resumo</h5>
+            <div class="mb-3">
+                <div class="text-white-50 small">Profissional</div>
+                <div class="fw-semibold" id="res-profissional">—</div>
+            </div>
+            <div class="mb-3">
+                <div class="text-white-50 small">Data e Hora</div>
+                <div class="fw-semibold" id="res-datahora">—</div>
+            </div>
+            <div class="mb-3">
+                <div class="text-white-50 small">Serviço</div>
+                <div class="fw-semibold" id="res-servico">—</div>
+            </div>
+            <hr style="border-color:rgba(255,255,255,.2);">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-white-50">Valor</span>
+                <span class="h4 fw-bold text-warning mb-0" id="res-valor">—</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const today = "{{ today }}";
+
+async function verificarHorarios() {
+    const funcId = document.getElementById('funcionario_select').value;
+    const data   = document.getElementById('data_input').value;
+    const grid   = document.getElementById('hora-grid');
+    const vazio  = document.getElementById('hora-vazio');
+    const loading = document.getElementById('loading-horas');
+
+    grid.innerHTML = '';
+    document.getElementById('hora_hidden').value = '';
+
+    if (!funcId || !data) {
+        vazio.style.display = 'block';
+        loading.style.display = 'none';
+        return;
+    }
+
+    vazio.style.display = 'none';
+    loading.style.display = 'block';
+
+    try {
+        const resp = await fetch(`/api/horarios/${funcId}/${data}`);
+        const json = await resp.json();
+        loading.style.display = 'none';
+
+        if (json.data && json.data.length > 0) {
+            json.data.forEach(h => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'hora-btn';
+                btn.textContent = h;
+                btn.onclick = () => selecionarHora(btn, h);
+                grid.appendChild(btn);
+            });
+        } else {
+            grid.innerHTML = '<p class="text-danger small col-span-4"><i class="fas fa-calendar-times me-1"></i>Nenhum horário disponível nesta data</p>';
+        }
+    } catch(e) {
+        loading.style.display = 'none';
+        grid.innerHTML = '<p class="text-danger small">Erro ao carregar horários</p>';
+    }
+
+    atualizarResumo();
+}
+
+function selecionarHora(btn, hora) {
+    document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('hora_hidden').value = hora;
+    atualizarResumo();
+}
+
+function atualizarResumo() {
+    const func = document.getElementById('funcionario_select');
+    const data = document.getElementById('data_input').value;
+    const hora = document.getElementById('hora_hidden').value;
+    const srv  = document.getElementById('servico_select');
+
+    document.getElementById('res-profissional').textContent = func.options[func.selectedIndex]?.text || '—';
+    document.getElementById('res-datahora').textContent = data && hora ? `${data.split('-').reverse().join('/')} às ${hora}` : '—';
+
+    if (srv.value) {
+        const opt = srv.options[srv.selectedIndex];
+        document.getElementById('res-servico').textContent = opt.text.split(' —')[0];
+        const val = parseFloat(opt.dataset.valor || 0);
+        document.getElementById('res-valor').textContent = val > 0 ? `R$ ${val.toFixed(2).replace('.',',')}` : '—';
+    } else {
+        document.getElementById('res-servico').textContent = '—';
+        document.getElementById('res-valor').textContent = '—';
+    }
+}
+
+// Inicializar com vazio
+document.getElementById('hora-vazio').style.display = 'block';
+document.getElementById('funcionario_select').addEventListener('change', atualizarResumo);
+
+// ── Calendário Admin ──────────────────────────────────────────
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_PT  = ['D','S','T','Q','Q','S','S'];
+let admCalYear, admCalMonth;
+
+function admCalInit() {
+    const now = new Date();
+    admCalYear  = now.getFullYear();
+    admCalMonth = now.getMonth();
+    admCalRender();
+}
+
+function admCalRender() {
+    const today   = new Date(); today.setHours(0,0,0,0);
+    const hidden  = document.getElementById('data_input');
+    const selVal  = hidden.value;
+
+    document.getElementById('adm-cal-title').textContent =
+        `${MESES_PT[admCalMonth]} ${admCalYear}`;
+
+    const grid = document.getElementById('adm-cal-grid');
+    grid.innerHTML = '';
+
+    // Cabeçalho
+    DIAS_PT.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'day-name'; el.textContent = d;
+        grid.appendChild(el);
+    });
+
+    const firstDay    = new Date(admCalYear, admCalMonth, 1).getDay();
+    const daysInMonth = new Date(admCalYear, admCalMonth + 1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+        const el = document.createElement('div');
+        el.className = 'cal-day empty'; grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const cell = new Date(admCalYear, admCalMonth, d); cell.setHours(0,0,0,0);
+        const el   = document.createElement('div');
+        el.className = 'cal-day';
+        el.textContent = d;
+
+        const mm  = String(admCalMonth + 1).padStart(2,'0');
+        const dd  = String(d).padStart(2,'0');
+        const iso = `${admCalYear}-${mm}-${dd}`;
+
+        if (cell < today) {
+            el.classList.add('disabled');
+        } else {
+            if (cell.getTime() === today.getTime()) el.classList.add('today');
+            if (iso === selVal) el.classList.add('selected');
+            el.addEventListener('click', () => {
+                hidden.value = iso;
+                const [y,m2,d2] = iso.split('-');
+                document.getElementById('adm-cal-label').innerHTML =
+                    `Data: <span>${d2}/${m2}/${y}</span>`;
+                admCalRender();
+                verificarHorarios();
+                atualizarResumo();
+            });
+        }
+        grid.appendChild(el);
+    }
+}
+
+document.getElementById('adm-cal-prev').addEventListener('click', () => {
+    admCalMonth--;
+    if (admCalMonth < 0) { admCalMonth = 11; admCalYear--; }
+    admCalRender();
+});
+document.getElementById('adm-cal-next').addEventListener('click', () => {
+    admCalMonth++;
+    if (admCalMonth > 11) { admCalMonth = 0; admCalYear++; }
+    admCalRender();
+});
+admCalInit();
+// ─────────────────────────────────────────────────────────────
+
+// Validar hora antes de submeter
+document.getElementById('formAgendamento').addEventListener('submit', function(e) {
+    if (!document.getElementById('hora_hidden').value) {
+        e.preventDefault();
+        alert('Por favor, selecione um horário antes de confirmar!');
+    }
+});
+
+// ── Modal Novo Cliente ────────────────────────────────────────
+document.getElementById('btnSalvarCliente').addEventListener('click', async function () {
+    const nome     = document.getElementById('nc-nome').value.trim();
+    const telefone = document.getElementById('nc-telefone').value.trim();
+    const email    = document.getElementById('nc-email').value.trim();
+    const alerta   = document.getElementById('modal-alerta');
+
+    alerta.className = 'alert d-none';
+    alerta.textContent = '';
+
+    if (!nome || !telefone) {
+        alerta.className = 'alert alert-danger';
+        alerta.textContent = 'Nome e telefone são obrigatórios!';
+        return;
+    }
+
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Salvando...';
+
+    try {
+        const resp = await fetch('/sistema/painel/clientes/api/criar-rapido', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, telefone, email })
+        });
+        const json = await resp.json();
+
+        if (json.status === 'success') {
+            // Adicionar ao select e selecionar automaticamente
+            const sel = document.getElementById('cliente_select');
+            const opt = document.createElement('option');
+            opt.value = json.id;
+            opt.textContent = `${json.nome} — ${json.telefone}`;
+            opt.selected = true;
+            sel.appendChild(opt);
+
+            // Fechar modal e limpar campos
+            bootstrap.Modal.getInstance(document.getElementById('modalNovoCliente')).hide();
+            document.getElementById('nc-nome').value = '';
+            document.getElementById('nc-telefone').value = '';
+            document.getElementById('nc-email').value = '';
+
+            // Feedback visual no select
+            sel.style.borderColor = '#198754';
+            sel.style.boxShadow = '0 0 0 .2rem rgba(25,135,84,.25)';
+            setTimeout(() => { sel.style.borderColor = ''; sel.style.boxShadow = ''; }, 2000);
+        } else {
+            alerta.className = 'alert alert-danger';
+            alerta.textContent = json.message || 'Erro ao cadastrar cliente';
+        }
+    } catch (err) {
+        alerta.className = 'alert alert-danger';
+        alerta.textContent = 'Erro de conexão. Tente novamente.';
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check me-1"></i> Salvar Cliente';
+});
+// ─────────────────────────────────────────────────────────────
+</script>
+{% endblock %}

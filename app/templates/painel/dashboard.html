@@ -1,0 +1,117 @@
+{% extends "painel/base.html" %}
+
+{% block title %}Dashboard - BARBEARIA ZUH{% endblock %}
+
+{% block painel_content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total de Clientes</h5>
+                <p class="display-6">{{ total_clientes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Serviços Concluídos</h5>
+                <p class="display-6">{{ total_servicos_mes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card border-danger">
+            <div class="card-body">
+                <h5 class="card-title">Contas Vencer Hoje</h5>
+                <p class="display-6 text-danger">{{ contas_vencer_hoje }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Produtos Estoque Baixo</h5>
+                <p class="display-6 text-warning">{{ produtos_baixo }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Agendamentos de Hoje</h5>
+            </div>
+            <div class="card-body">
+                <p class="display-6 text-primary">{{ agendamentos_hoje }}</p>
+                <small class="text-muted">Agendamentos confirmados para hoje</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Taxa de Conclusão</h5>
+            </div>
+            <div class="card-body">
+                <p class="display-6 text-success">{{ taxa_conclusao }}%</p>
+                <small class="text-muted">De todos os agendamentos</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Últimos Agendamentos</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Profissional</th>
+                                <th>Serviço</th>
+                                <th>Data</th>
+                                <th>Hora</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for agendamento in ultimos_agendamentos %}
+                            <tr>
+                                <td>{{ agendamento.cliente.nome }}</td>
+                                <td>{{ agendamento.funcionario.nome }}</td>
+                                <td>{{ agendamento.servico.nome }}</td>
+                                <td>{{ agendamento.data.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ agendamento.hora.strftime('%H:%M') }}</td>
+                                <td>
+                                    {% if agendamento.status == 'Agendado' %}
+                                    <span class="badge bg-info">Agendado</span>
+                                    {% elif agendamento.status == 'Concluído' %}
+                                    <span class="badge bg-success">Concluído</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Cancelado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends "painel/base.html" %}
+{% block title %}Meu Perfil - BARBEARIA ZUH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .perfil-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-radius: 20px;
+        padding: 35px;
+        color: white;
+        margin-bottom: 28px;
+    }
+    .avatar-lg {
+        width: 88px; height: 88px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e94560, #c4122f);
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.2rem; font-weight: 700;
+        border: 4px solid rgba(255,255,255,0.2);
+        flex-shrink: 0;
+    }
+    .nivel-pill {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: .8rem;
+        font-weight: 700;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(4px);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.25);
+    }
+    .info-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    }
+    .section-title {
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #9ca3af;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0f3460;
+        box-shadow: 0 0 0 .2rem rgba(15,52,96,.12);
+    }
+    .stat-item { text-align: center; padding: 16px 10px; }
+    .stat-item .num { font-size: 1.8rem; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+
+<!-- Cabeçalho do perfil -->
+<div class="perfil-header">
+    <div class="d-flex align-items-center gap-4">
+        <div class="avatar-lg">{{ usuario.nome[0].upper() }}</div>
+        <div class="flex-grow-1">
+            <h2 class="fw-bold mb-1">{{ usuario.nome }}</h2>
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <span class="nivel-pill"><i class="fas fa-shield-alt me-1"></i>{{ usuario.nivel }}</span>
+                <span class="text-white-50"><i class="fas fa-envelope me-1"></i>{{ usuario.email }}</span>
+                {% if usuario.telefone %}
+                <span class="text-white-50"><i class="fas fa-phone me-1"></i>{{ usuario.telefone or 'Não informado' }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="text-end d-none d-md-block">
+            <div class="text-white-50 small">Membro desde</div>
+            <div class="fw-semibold">{{ usuario.data_criacao.strftime('%d/%m/%Y') if usuario.data_criacao else '—' }}</div>
+        </div>
+    </div>
+
+    <!-- Stats rápidos -->
+    <div class="row mt-4 g-0 text-center">
+        <div class="col">
+            <div class="text-white-50 small">Agendamentos</div>
+            <div class="fw-bold fs-4">{{ usuario.agendamentos_como_funcionario | list | length if usuario.agendamentos_como_funcionario else 0 }}</div>
+        </div>
+        <div class="col border-start border-white border-opacity-25">
+            <div class="text-white-50 small">Nível</div>
+            <div class="fw-bold fs-6 mt-1">{{ usuario.nivel }}</div>
+        </div>
+        <div class="col border-start border-white border-opacity-25">
+            <div class="text-white-50 small">Status</div>
+            <div class="fw-bold {% if usuario.ativo == 'Sim' %}text-success{% else %}text-danger{% endif %}">
+                {% if usuario.ativo == 'Sim' %}● Ativo{% else %}● Inativo{% endif %}
+            </div>
+        </div>
+        <div class="col border-start border-white border-opacity-25">
+            <div class="text-white-50 small">Atendimento</div>
+            <div class="fw-bold">{% if usuario.atendimento == 'Sim' %}✅ Sim{% else %}❌ Não{% endif %}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Editar dados pessoais -->
+    <div class="col-md-6">
+        <div class="card info-card h-100">
+            <div class="card-body p-4">
+                <p class="section-title"><i class="fas fa-user me-1"></i>Dados Pessoais</p>
+                <form method="POST" action="{{ url_for('auth.editar_perfil') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nome Completo</label>
+                        <input type="text" name="nome" class="form-control" value="{{ usuario.nome }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ usuario.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Telefone / WhatsApp</label>
+                        <input type="tel" name="telefone" class="form-control" value="{{ usuario.telefone or '' }}" placeholder="(11) 99999-9999">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Chave PIX</label>
+                        <input type="text" name="chave_pix" class="form-control" value="{{ usuario.chave_pix or '' }}" placeholder="CPF, email, telefone ou aleatória">
+                        <small class="text-muted">Usada para receber comissões</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                        <i class="fas fa-save me-2"></i>Salvar Dados Pessoais
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alterar senha -->
+    <div class="col-md-6">
+        <div class="card info-card mb-4">
+            <div class="card-body p-4">
+                <p class="section-title"><i class="fas fa-lock me-1"></i>Alterar Senha</p>
+                <form method="POST" action="{{ url_for('auth.alterar_senha') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Senha Atual</label>
+                        <input type="password" name="senha_atual" class="form-control" required placeholder="••••••••">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nova Senha</label>
+                        <input type="password" name="senha_nova" id="nova_senha" class="form-control" required placeholder="Mínimo 6 caracteres" minlength="6">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Confirmar Nova Senha</label>
+                        <input type="password" name="senha_confirmacao" id="conf_senha" class="form-control" required placeholder="Repita a nova senha">
+                        <div id="senha_match" class="form-text" style="display:none;"></div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-dark w-100 rounded-pill">
+                        <i class="fas fa-key me-2"></i>Alterar Senha
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Informações somente leitura -->
+        <div class="card info-card">
+            <div class="card-body p-4">
+                <p class="section-title"><i class="fas fa-id-card me-1"></i>Informações da Conta</p>
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">CPF</td>
+                        <td class="fw-semibold">{{ usuario.cpf or 'Não informado' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Nível de Acesso</td>
+                        <td>
+                            <span style="background:#e0f2fe;color:#0369a1;padding:2px 10px;border-radius:20px;font-size:.8rem;font-weight:700;">
+                                {{ usuario.nivel }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Faz Atendimento</td>
+                        <td>{{ usuario.atendimento }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Criado em</td>
+                        <td>{{ usuario.data_criacao.strftime('%d/%m/%Y às %H:%M') if usuario.data_criacao else '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Última atualização</td>
+                        <td>{{ usuario.data_atualizacao.strftime('%d/%m/%Y às %H:%M') if usuario.data_atualizacao else '—' }}</td>
+                    </tr>
+                </table>
+                <p class="text-muted small mt-3 mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    CPF e nível de acesso só podem ser alterados pelo Administrador.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Verificação de senha em tempo real
+const novaSenha = document.getElementById('nova_senha');
+const confSenha = document.getElementById('conf_senha');
+const matchInfo = document.getElementById('senha_match');
+
+function checkSenha() {
+    if (confSenha.value.length === 0) {
+        matchInfo.style.display = 'none';
+        return;
+    }
+    matchInfo.style.display = 'block';
+    if (novaSenha.value === confSenha.value) {
+        matchInfo.textContent = '✅ Senhas conferem';
+        matchInfo.className = 'form-text text-success fw-semibold';
+    } else {
+        matchInfo.textContent = '❌ Senhas não conferem';
+        matchInfo.className = 'form-text text-danger fw-semibold';
+    }
+}
+
+novaSenha.addEventListener('input', checkSenha);
+confSenha.addEventListener('input', checkSenha);
+</script>
+{% endblock %}

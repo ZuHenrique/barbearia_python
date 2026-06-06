@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+
+{% block title %}Agendar - BARBEARIA ZUH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    
+    .step {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+    }
+    
+    .step.active {
+        color: #007bff;
+        font-weight: bold;
+    }
+    
+    .step.completed {
+        color: #28a745;
+    }
+    
+    .step-form {
+        display: none;
+    }
+    
+    .step-form.active {
+        display: block;
+    }
+
+    /* ── Calendário customizado ── */
+    .cal-wrapper {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        overflow: hidden;
+        user-select: none;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .cal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #0d6efd;
+        color: #fff;
+        padding: 10px 16px;
+        font-weight: 600;
+    }
+    .cal-header button {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0 6px;
+        line-height: 1;
+    }
+    .cal-header button:hover { opacity: .75; }
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+    }
+    .cal-grid .day-name {
+        padding: 8px 0;
+        font-size: .75rem;
+        font-weight: 700;
+        color: #6c757d;
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .cal-grid .cal-day {
+        padding: 9px 4px;
+        font-size: .9rem;
+        cursor: pointer;
+        border-radius: 6px;
+        margin: 2px;
+        transition: background .15s, color .15s;
+    }
+    .cal-grid .cal-day:hover:not(.disabled):not(.empty) {
+        background: #cfe2ff;
+        color: #0d6efd;
+    }
+    .cal-grid .cal-day.selected {
+        background: #0d6efd;
+        color: #fff;
+        font-weight: 700;
+    }
+    .cal-grid .cal-day.today:not(.selected) {
+        border: 2px solid #0d6efd;
+        color: #0d6efd;
+        font-weight: 700;
+    }
+    .cal-grid .cal-day.disabled {
+        color: #ced4da;
+        cursor: not-allowed;
+    }
+    .cal-grid .cal-day.empty {
+        cursor: default;
+    }
+    .cal-selected-display {
+        text-align: center;
+        margin-top: 8px;
+        font-size: .9rem;
+        color: #495057;
+        min-height: 22px;
+    }
+    .cal-selected-display span {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">Agendar Serviço</h1>
+            
+            <div class="step-indicator">
+                <div class="step active" data-step="1">
+                    <div class="badge bg-primary">1</div>
+                    <p>Dados Pessoais</p>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="badge bg-secondary">2</div>
+                    <p>Profissional</p>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="badge bg-secondary">3</div>
+                    <p>Data e Hora</p>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="badge bg-secondary">4</div>
+                    <p>Serviço</p>
+                </div>
+                <div class="step" data-step="5">
+                    <div class="badge bg-secondary">5</div>
+                    <p>Confirmação</p>
+                </div>
+            </div>
+            
+            <form id="agendamentForm" method="POST" novalidate>
+                <!-- Step 1: Dados Pessoais -->
+                <div class="step-form active" data-step="1">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome Completo *</label>
+                        <input type="text" class="form-control" id="nome" name="nome">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="telefone" class="form-label">Telefone *</label>
+                        <input type="tel" class="form-control" id="telefone" name="telefone">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="obs" class="form-label">Observações</label>
+                        <textarea class="form-control" id="obs" name="obs" rows="3"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Profissional -->
+                <div class="step-form" data-step="2">
+                    <div class="mb-3">
+                        <label for="funcionario" class="form-label">Escolha o Profissional *</label>
+                        <select class="form-control" id="funcionario" name="funcionario_id">
+                            <option value="">Selecione um profissional...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Data e Hora -->
+                <div class="step-form" data-step="3">
+                    <!-- Campo hidden que armazena o valor real da data -->
+                    <input type="hidden" id="data" name="data">
+
+                    <div class="mb-3">
+                        <label class="form-label">Data *</label>
+                        <div class="cal-wrapper">
+                            <div class="cal-header">
+                                <button type="button" id="cal-prev" title="Mês anterior">&#8249;</button>
+                                <span id="cal-title"></span>
+                                <button type="button" id="cal-next" title="Próximo mês">&#8250;</button>
+                            </div>
+                            <div class="cal-grid" id="cal-grid"></div>
+                        </div>
+                        <div class="cal-selected-display" id="cal-selected-display">Nenhuma data selecionada</div>
+                    </div>
+
+                    <div class="mb-3" id="hora-container" style="display:none;">
+                        <label for="hora" class="form-label">Horário *</label>
+                        <select class="form-control" id="hora" name="hora">
+                            <option value="">Selecione o horário...</option>
+                        </select>
+                    </div>
+                    <div id="hora-loading" style="display:none;" class="text-muted my-2">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando horários...
+                    </div>
+                </div>
+                
+                <!-- Step 4: Serviço -->
+                <div class="step-form" data-step="4">
+                    <div class="mb-3">
+                        <label for="servico" class="form-label">Escolha o Serviço *</label>
+                        <select class="form-control" id="servico" name="servico_id">
+                            <option value="">Selecione um serviço...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Confirmação -->
+                <div class="step-form" data-step="5">
+                    <div class="alert alert-info">
+                        <h5>Confirme seus dados:</h5>
+                        <p><strong>Nome:</strong> <span id="resumo_nome"></span></p>
+                        <p><strong>Telefone:</strong> <span id="resumo_telefone"></span></p>
+                        <p><strong>Profissional:</strong> <span id="resumo_funcionario"></span></p>
+                        <p><strong>Data:</strong> <span id="resumo_data"></span></p>
+                        <p><strong>Horário:</strong> <span id="resumo_hora"></span></p>
+                        <p><strong>Serviço:</strong> <span id="resumo_servico"></span></p>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-secondary w-100" id="prevBtn">Anterior</button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-primary w-100" id="nextBtn">Próximo</button>
+                        <button type="submit" class="btn btn-success w-100" id="submitBtn" style="display:none;">Confirmar Agendamento</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+
+async function loadFuncionarios() {
+    try {
+        const response = await fetch('/api/funcionarios');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const select = document.getElementById('funcionario');
+            data.data.forEach(f => {
+                const option = document.createElement('option');
+                option.value = f.id;
+                option.textContent = f.nome;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar funcionários:', error);
+    }
+}
+
+async function loadServicos() {
+    try {
+        const response = await fetch('/api/servicos');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const select = document.getElementById('servico');
+            data.data.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.id;
+                option.textContent = `${s.nome} - R$ ${s.valor.toFixed(2)}`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar serviços:', error);
+    }
+}
+
+async function loadHorarios() {
+    const funcionarioId = document.getElementById('funcionario').value;
+    const data = document.getElementById('data').value;
+    
+    if (!funcionarioId || !data) return;
+    
+    const horaContainer = document.getElementById('hora-container');
+    const horaLoading = document.getElementById('hora-loading');
+    const select = document.getElementById('hora');
+    
+    horaContainer.style.display = 'none';
+    horaLoading.style.display = 'block';
+    select.innerHTML = '<option value="">Selecione o horário...</option>';
+    
+    try {
+        const response = await fetch(`/api/horarios/${funcionarioId}/${data}`);
+        const resultado = await response.json();
+        
+        horaLoading.style.display = 'none';
+        
+        if (resultado.status === 'success' && resultado.data.length > 0) {
+            resultado.data.forEach(horario => {
+                const option = document.createElement('option');
+                option.value = horario;
+                option.textContent = horario;
+                select.appendChild(option);
+            });
+            horaContainer.style.display = 'block';
+        } else {
+            horaContainer.style.display = 'block';
+            select.innerHTML = '<option value="">Nenhum horário disponível nesta data</option>';
+        }
+    } catch (error) {
+        horaLoading.style.display = 'none';
+        horaContainer.style.display = 'block';
+        console.error('Erro ao carregar horários:', error);
+    }
+}
+
+function showStep(n) {
+    const steps = document.querySelectorAll('.step-form');
+    const indicators = document.querySelectorAll('.step');
+    
+    if (n > totalSteps) currentStep = totalSteps;
+    if (n < 1) currentStep = 1;
+    
+    steps.forEach(step => step.classList.remove('active'));
+    indicators.forEach(indicator => {
+        indicator.classList.remove('active', 'completed');
+    });
+    
+    steps[currentStep - 1].classList.add('active');
+    indicators[currentStep - 1].classList.add('active');
+    
+    for (let i = 0; i < currentStep - 1; i++) {
+        indicators[i].classList.add('completed');
+    }
+    
+    document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'block';
+    document.getElementById('nextBtn').style.display = currentStep === totalSteps ? 'none' : 'block';
+    document.getElementById('submitBtn').style.display = currentStep === totalSteps ? 'block' : 'none';
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+    currentStep--;
+    showStep(currentStep);
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+    if (validateStep(currentStep)) {
+        currentStep++;
+        showStep(currentStep);
+        if (currentStep === 5) {
+            updateResume();
+        }
+    }
+});
+
+document.getElementById('data').addEventListener('change', loadHorarios);
+document.getElementById('funcionario').addEventListener('change', loadHorarios);
+
+document.getElementById('agendamentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const dados = {
+        nome: document.getElementById('nome').value,
+        telefone: document.getElementById('telefone').value,
+        funcionario_id: parseInt(document.getElementById('funcionario').value),
+        servico_id: parseInt(document.getElementById('servico').value),
+        data: document.getElementById('data').value,
+        hora: document.getElementById('hora').value,
+        obs: document.getElementById('obs').value
+    };
+    
+    try {
+        const response = await fetch('/api/agendamentos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        const resultado = await response.json();
+        
+        if (resultado.status === 'success') {
+            alert('Agendamento realizado com sucesso!');
+            document.getElementById('agendamentForm').reset();
+            currentStep = 1;
+            showStep(currentStep);
+        } else {
+            alert('Erro: ' + resultado.message);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao realizar agendamento');
+    }
+});
+
+function validateStep(step) {
+    if (step === 1) {
+        return document.getElementById('nome').value && document.getElementById('telefone').value;
+    } else if (step === 2) {
+        return document.getElementById('funcionario').value;
+    } else if (step === 3) {
+        return document.getElementById('data').value && document.getElementById('hora').value;
+    } else if (step === 4) {
+        return document.getElementById('servico').value;
+    }
+    return true;
+}
+
+function updateResume() {
+    document.getElementById('resumo_nome').textContent = document.getElementById('nome').value;
+    document.getElementById('resumo_telefone').textContent = document.getElementById('telefone').value;
+    const funcionarioSelect = document.getElementById('funcionario');
+    document.getElementById('resumo_funcionario').textContent = funcionarioSelect.options[funcionarioSelect.selectedIndex].text;
+    document.getElementById('resumo_data').textContent = new Date(document.getElementById('data').value).toLocaleDateString('pt-BR');
+    document.getElementById('resumo_hora').textContent = document.getElementById('hora').value;
+    const servicoSelect = document.getElementById('servico');
+    document.getElementById('resumo_servico').textContent = servicoSelect.options[servicoSelect.selectedIndex].text;
+}
+
+// ── Calendário customizado ──────────────────────────────────
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_PT  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+let calViewYear, calViewMonth;
+
+function calInit() {
+    const now = new Date();
+    calViewYear  = now.getFullYear();
+    calViewMonth = now.getMonth();
+    calRender();
+}
+
+function calRender() {
+    const today      = new Date();
+    today.setHours(0,0,0,0);
+    const hiddenInput = document.getElementById('data');
+    const selectedVal = hiddenInput.value; // 'YYYY-MM-DD' or ''
+
+    // Título
+    document.getElementById('cal-title').textContent =
+        `${MESES_PT[calViewMonth]} de ${calViewYear}`;
+
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+
+    // Cabeçalho dias da semana
+    DIAS_PT.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'day-name';
+        el.textContent = d;
+        grid.appendChild(el);
+    });
+
+    // Primeiro dia do mês
+    const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
+    // Total de dias no mês
+    const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+
+    // Células vazias antes do dia 1
+    for (let i = 0; i < firstDay; i++) {
+        const el = document.createElement('div');
+        el.className = 'cal-day empty';
+        grid.appendChild(el);
+    }
+
+    // Dias
+    for (let d = 1; d <= daysInMonth; d++) {
+        const cellDate = new Date(calViewYear, calViewMonth, d);
+        cellDate.setHours(0,0,0,0);
+        const el = document.createElement('div');
+        el.className = 'cal-day';
+        el.textContent = d;
+
+        const yyyy = calViewYear;
+        const mm   = String(calViewMonth + 1).padStart(2,'0');
+        const dd   = String(d).padStart(2,'0');
+        const iso  = `${yyyy}-${mm}-${dd}`;
+
+        if (cellDate < today) {
+            el.classList.add('disabled');
+        } else {
+            if (cellDate.getTime() === today.getTime()) el.classList.add('today');
+            if (iso === selectedVal) el.classList.add('selected');
+
+            el.addEventListener('click', () => {
+                hiddenInput.value = iso;
+                // Exibir data legível
+                const [y,m2,d2] = iso.split('-');
+                document.getElementById('cal-selected-display').innerHTML =
+                    `Data selecionada: <span>${d2}/${m2}/${y}</span>`;
+                calRender(); // re-renderiza para destacar seleção
+                loadHorarios(); // carrega horários disponíveis
+            });
+        }
+        grid.appendChild(el);
+    }
+}
+
+document.getElementById('cal-prev').addEventListener('click', () => {
+    calViewMonth--;
+    if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+    calRender();
+});
+
+document.getElementById('cal-next').addEventListener('click', () => {
+    calViewMonth++;
+    if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+    calRender();
+});
+// ────────────────────────────────────────────────────────────
+
+// Inicializar
+loadFuncionarios();
+loadServicos();
+showStep(currentStep);
+calInit();
+</script>
+{% endblock %}

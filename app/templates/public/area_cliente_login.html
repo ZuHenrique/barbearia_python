@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Área do Cliente - Login{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+        overflow: hidden;
+    }
+    .auth-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        padding: 40px 30px;
+        text-align: center;
+    }
+    .auth-header .scissors-icon {
+        font-size: 3rem;
+        color: #e94560;
+        margin-bottom: 10px;
+    }
+    .auth-header h4 {
+        color: white;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+    .auth-header p {
+        color: rgba(255,255,255,0.65);
+        margin: 5px 0 0;
+        font-size: 0.9rem;
+    }
+    .auth-body {
+        padding: 40px 35px;
+        background: white;
+    }
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #eee;
+        padding: 12px 15px;
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        border-color: #0f3460;
+        box-shadow: 0 0 0 0.2rem rgba(15,52,96,0.15);
+    }
+    .btn-entrar {
+        background: linear-gradient(135deg, #0f3460, #e94560);
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+    .btn-entrar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(233,69,96,0.4);
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: #aaa;
+        font-size: 0.85rem;
+        margin: 20px 0;
+    }
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #eee;
+    }
+    .btn-social {
+        border-radius: 10px;
+        padding: 11px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn-google {
+        background: white;
+        border: 2px solid #ddd;
+        color: #444;
+    }
+    .btn-google:hover {
+        border-color: #EA4335;
+        color: #EA4335;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(234,67,53,0.2);
+    }
+    .btn-facebook {
+        background: white;
+        border: 2px solid #ddd;
+        color: #444;
+    }
+    .btn-facebook:hover {
+        border-color: #1877F2;
+        color: #1877F2;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(24,119,242,0.2);
+    }
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    .auth-footer a {
+        color: #0f3460;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+    .label-input {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #444;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="min-height: 80vh; display: flex; align-items: center;">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-5 col-lg-4">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="scissors-icon"><i class="fas fa-cut"></i></div>
+                    <h4>Área do Cliente</h4>
+                    <p>Acesse sua conta e gerencie seus agendamentos</p>
+                </div>
+                <div class="auth-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} py-2 mb-3">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Botões Sociais -->
+                    <a href="{{ url_for('area_cliente.login_google') }}" class="btn-social btn-google mb-3 d-block">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google">
+                        Continuar com Google
+                    </a>
+                    <a href="{{ url_for('area_cliente.login_facebook') }}" class="btn-social btn-facebook mb-3 d-block">
+                        <i class="fab fa-facebook" style="color: #1877F2; font-size: 1.2rem;"></i>
+                        Continuar com Facebook
+                    </a>
+
+                    <div class="divider">ou entre com email</div>
+
+                    <!-- Formulário Email -->
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="label-input">Email</label>
+                            <input type="email" name="email" class="form-control" required placeholder="seu@email.com">
+                        </div>
+                        <div class="mb-4">
+                            <label class="label-input">Senha</label>
+                            <input type="password" name="senha" class="form-control" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-entrar text-white w-100">Entrar na minha conta</button>
+                    </form>
+
+                    <div class="auth-footer">
+                        Não tem uma conta? <a href="{{ url_for('area_cliente.cadastro') }}">Cadastre-se grátis</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

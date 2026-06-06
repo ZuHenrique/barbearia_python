@@ -1,0 +1,68 @@
+{% extends "painel/base.html" %}
+{% block title %}Novo Serviço{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-cut me-2 text-primary"></i>Novo Serviço</h3>
+    <a href="{{ url_for('servicos.listar') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4" style="max-width:680px;">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Nome do Serviço *</label>
+                    <input type="text" name="nome" class="form-control" required placeholder="Ex: Corte Simples, Barba, Corte + Barba...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Categoria</label>
+                    <select name="categoria_id" class="form-select">
+                        <option value="">Sem categoria</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Crie categorias para organizar seus serviços</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select name="ativo" class="form-select">
+                        <option value="Sim" selected>Ativo (disponível p/ agendamento)</option>
+                        <option value="Não">Inativo (oculto)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Valor do Serviço (R$) *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" name="valor" class="form-control" step="0.01" min="0.01" required placeholder="0,00">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Comissão do Barbeiro (R$)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" name="valor_comissao" class="form-control" step="0.01" min="0" value="0" placeholder="0,00">
+                    </div>
+                    <small class="text-muted">Quanto o barbeiro recebe por este serviço</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Sugestão de Retorno (dias)</label>
+                    <input type="number" name="dias_retorno" class="form-control" min="1" max="365" value="30">
+                    <small class="text-muted">Após quantos dias sugerir retorno</small>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Descrição (opcional)</label>
+                    <textarea name="descricao" class="form-control" rows="3" placeholder="Descreva o serviço para seus clientes..."></textarea>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary px-5 rounded-pill">
+                    <i class="fas fa-save me-2"></i>Cadastrar Serviço
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

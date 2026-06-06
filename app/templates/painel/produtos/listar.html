@@ -1,0 +1,129 @@
+{% extends "painel/base.html" %}
+{% block title %}Produtos - BARBEARIA ZUH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-pro { border:none; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.07); }
+    .pro-row:hover { background:#f8faff; }
+    .pro-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem; flex-shrink:0; }
+    .estoque-ok      { background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:.8rem; font-weight:700; }
+    .estoque-baixo   { background:#fef3c7; color:#92400e; padding:3px 10px; border-radius:20px; font-size:.8rem; font-weight:700; }
+    .estoque-critico { background:#fee2e2; color:#991b1b; padding:3px 10px; border-radius:20px; font-size:.8rem; font-weight:700; }
+    .margem-positiva { font-size:.8rem; color:#065f46; font-weight:600; }
+    .nav-tabs .nav-link.active { border-bottom:3px solid #0f3460; color:#0f3460; font-weight:600; }
+    .nav-tabs .nav-link { color:#6b7280; }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="fas fa-box me-2 text-primary"></i>Produtos</h3>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('produtos.estoque_baixo') }}" class="btn btn-outline-warning rounded-pill px-3">
+            <i class="fas fa-exclamation-triangle me-1"></i> Estoque Baixo
+        </a>
+        <a href="{{ url_for('produtos.novo') }}" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-plus me-1"></i> Novo Produto
+        </a>
+    </div>
+</div>
+
+<!-- Cards Resumo -->
+{% set estoque_total = produtos.items | sum(attribute='estoque') %}
+{% set criticos = produtos.items | selectattr('estoque', '<=', 0) | list | length %}
+{% set baixo = produtos.items | list | selectattr('estoque', '>', 0) | list %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-primary mb-0">{{ produtos.total }}</div><small class="text-muted">Produtos</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-success mb-0">{{ estoque_total }}</div><small class="text-muted">Itens em Estoque</small></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm rounded-3 p-3 text-center"><div class="h3 fw-bold text-danger mb-0">{{ criticos }}</div><small class="text-muted">Sem Estoque</small></div></div>
+    <div class="col-md-3">
+        <a href="{{ url_for('produtos.entradas') }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+                <div class="h3 fw-bold text-info mb-0"><i class="fas fa-history" style="font-size:1.4rem;"></i></div>
+                <small class="text-muted">Ver Movimentações</small>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="card card-pro">
+    <div class="card-body p-0">
+        {% if produtos.items %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Produto</th>
+                        <th>Categoria</th>
+                        <th>Compra</th>
+                        <th>Venda</th>
+                        <th>Margem</th>
+                        <th class="text-center">Estoque</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produtos.items %}
+                    {% set margem = ((p.valor_venda - p.valor_compra) / p.valor_venda * 100) if p.valor_venda > 0 else 0 %}
+                    {% set alerta = p.estoque <= 0 %}
+                    {% set baixo_est = p.estoque > 0 and p.estoque <= p.nivel_estoque %}
+                    <tr class="pro-row {% if alerta %}table-danger bg-opacity-25{% elif baixo_est %}table-warning bg-opacity-25{% endif %}">
+                        <td class="ps-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="pro-icon" style="background:linear-gradient(135deg,{% if alerta %}#ef4444,#dc2626{% elif baixo_est %}#f59e0b,#d97706{% else %}#0f3460,#1d4ed8{% endif %});">
+                                    <i class="fas fa-{% if alerta %}exclamation{% elif baixo_est %}exclamation-triangle{% else %}box-open{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ p.nome }}</div>
+                                    {% if p.descricao %}<small class="text-muted">{{ p.descricao[:40] }}{% if p.descricao|length > 40 %}…{% endif %}</small>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if p.categoria %}
+                            <span class="badge bg-secondary bg-opacity-75">{{ p.categoria.nome }}</span>
+                            {% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-muted">R$ {{ "%.2f"|format(p.valor_compra) }}</td>
+                        <td class="fw-bold text-success">R$ {{ "%.2f"|format(p.valor_venda) }}</td>
+                        <td><span class="margem-positiva">{{ "%.0f"|format(margem) }}%</span></td>
+                        <td class="text-center">
+                            {% if alerta %}
+                                <span class="estoque-critico">⚠️ Zerado</span>
+                            {% elif baixo_est %}
+                                <span class="estoque-baixo">⚠️ {{ p.estoque }} un</span>
+                            {% else %}
+                                <span class="estoque-ok">✓ {{ p.estoque }} un</span>
+                            {% endif %}
+                            <div><small class="text-muted">mín: {{ p.nivel_estoque }}</small></div>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{{ url_for('produtos.editar', id=p.id) }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('produtos.excluir', id=p.id) }}"
+                                      onsubmit="return confirm('Excluir {{ p.nome }}?')">
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum produto cadastrado</h5>
+            <a href="{{ url_for('produtos.novo') }}" class="btn btn-primary mt-2 rounded-pill px-4">
+                <i class="fas fa-plus me-1"></i> Cadastrar Produto
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

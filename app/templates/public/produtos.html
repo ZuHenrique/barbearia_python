@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - BARBEARIA ZUH{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Nossa Loja</h1>
+    
+    <div class="row">
+        {% for produto in produtos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if produto.foto %}
+                <img src="{{ url_for('static', filename='uploads/' + produto.foto) }}" class="card-img-top" alt="{{ produto.nome }}">
+                {% else %}
+                <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-box text-white" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ produto.nome }}</h5>
+                    <p class="card-text">{{ produto.descricao or '' }}</p>
+                    {% if produto.estoque > 0 %}
+                    <p class="text-success fw-bold">R$ {{ "%.2f"|format(produto.valor_venda) }}</p>
+                    <small class="text-muted">{{ produto.estoque }} em estoque</small>
+                    {% else %}
+                    <p class="text-danger">Indisponível</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

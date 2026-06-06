@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastre-se como Barbeiro | BarbeariaOS</title>
+  <meta name="description" content="Crie seu perfil de barbeiro profissional com subdomínio próprio, agenda online e portfólio. Grátis por 30 dias.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c28;
+      --border: rgba(255,255,255,0.08);
+      --accent: #8b5cf6;
+      --accent2: #7c3aed;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --radius: 14px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 2rem; border-bottom: 1px solid var(--border);
+      background: rgba(10,10,15,0.9); backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 1.3rem; font-weight: 800; color: #8b5cf6; letter-spacing: -0.5px; }
+    .logo span { color: var(--text); }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .2s; }
+    nav a:hover { color: var(--text); }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+
+    .split { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 65px); }
+
+    .left-panel {
+      background: linear-gradient(135deg, #0f0a1e 0%, #0a0a0f 60%);
+      padding: 4rem 3rem;
+      display: flex; flex-direction: column; justify-content: center;
+      border-right: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute; top: -100px; left: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge-tipo {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3);
+      color: var(--accent);
+      padding: .4rem 1rem; border-radius: 100px;
+      font-size: .8rem; font-weight: 600; margin-bottom: 1.5rem; width: fit-content;
+    }
+    .left-panel h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+    .left-panel h1 span { color: var(--accent); }
+    .left-panel p { color: var(--muted); line-height: 1.7; margin-bottom: 2rem; font-size: 1rem; }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: .75rem; }
+    .feature-list li { display: flex; align-items: center; gap: .75rem; color: var(--muted); font-size: .9rem; }
+    .feature-list li i { color: var(--accent); width: 20px; text-align: center; }
+    .preview-url {
+      margin-top: 2.5rem; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      font-family: 'Courier New', monospace; font-size: .9rem;
+    }
+    .preview-url .label { color: var(--muted); font-size: .75rem; font-family: 'Inter', sans-serif; margin-bottom: .35rem; }
+    .preview-url .url { color: var(--accent); }
+    .preview-url .url .slug-preview { color: var(--text); font-weight: 700; }
+
+    /* Comparativo de tipos */
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: .75rem; margin-top: 2rem;
+    }
+    .compare-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .compare-card.active { border-color: var(--accent); background: rgba(139,92,246,0.08); }
+    .compare-card .ct { font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: .4rem; }
+    .compare-card.active .ct { color: var(--accent); }
+    .compare-card .cn { font-size: .85rem; color: var(--text); font-weight: 500; }
+
+    .right-panel { padding: 3rem 3.5rem; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
+    .right-panel h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: .4rem; }
+    .right-panel .sub { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+    .right-panel .sub a { color: var(--accent); text-decoration: none; }
+
+    .alerts { margin-bottom: 1.25rem; }
+    .alert { padding: .75rem 1rem; border-radius: 8px; font-size: .875rem; margin-bottom: .5rem; }
+    .alert-danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .alert-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: .82rem; font-weight: 500; color: var(--muted); }
+    label .req { color: var(--accent); }
+    .input-wrap { position: relative; }
+    .input-wrap i.icon {
+      position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: .85rem; pointer-events: none;
+    }
+    input, select, textarea {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 10px; padding: .75rem 1rem .75rem 2.5rem;
+      font-size: .9rem; font-family: 'Inter', sans-serif;
+      transition: border-color .2s, box-shadow .2s; outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+    }
+    input.no-icon, select.no-icon, textarea.no-icon { padding-left: 1rem; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .slug-field-wrap {
+      display: flex; align-items: center;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; transition: border-color .2s, box-shadow .2s;
+    }
+    .slug-field-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+    }
+    .slug-prefix {
+      padding: .75rem 1rem; font-size: .85rem; color: var(--muted);
+      white-space: nowrap; border-right: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .slug-input { border: none !important; border-radius: 0 !important; padding-left: .75rem !important; box-shadow: none !important; background: transparent !important; flex: 1; }
+    .slug-status { padding: 0 .75rem; font-size: .8rem; white-space: nowrap; }
+    .slug-status.ok { color: var(--success); }
+    .slug-status.err { color: var(--danger); }
+    .slug-status.loading { color: var(--muted); }
+    .slug-hint { font-size: .77rem; color: var(--muted); margin-top: .3rem; }
+
+    .btn-submit {
+      width: 100%; padding: .9rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: opacity .2s, transform .1s; margin-top: 1.5rem;
+      display: flex; align-items: center; justify-content: center; gap: .6rem;
+    }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+
+    .trial-badge {
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 8px; padding: .75rem 1rem; font-size: .82rem; color: #86efac;
+      display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem;
+    }
+
+    .divider {
+      text-align: center; color: var(--muted); font-size: .8rem; margin: 1rem 0; position: relative;
+    }
+    .divider::before, .divider::after {
+      content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--border);
+    }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+    .link-outro-tipo { text-align: center; font-size: .85rem; color: var(--muted); }
+    .link-outro-tipo a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 2rem 1.5rem; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Barbearia<span>OS</span></div>
+  <div class="nav-links">
+    <a href="/">Início</a>
+    <a href="/planos">Planos</a>
+    <a href="/cadastro/barbearia">Tenho uma Barbearia</a>
+  </div>
+</nav>
+
+<div class="split">
+
+  <!-- ESQUERDA -->
+  <div class="left-panel">
+    <div class="badge-tipo"><i class="fas fa-cut"></i> Conta Barbeiro Profissional</div>
+    <h1>Sua agenda,<br><span>sua identidade</span></h1>
+    <p>Crie seu perfil profissional de barbeiro autônomo. Receba agendamentos, mostre seu portfólio e gerencie seus clientes — tudo no seu próprio endereço.</p>
+
+    <ul class="feature-list">
+      <li><i class="fas fa-calendar-alt"></i> Agenda pessoal com link de agendamento</li>
+      <li><i class="fas fa-images"></i> Portfólio de trabalhos</li>
+      <li><i class="fas fa-users"></i> Histórico de clientes</li>
+      <li><i class="fas fa-wallet"></i> Controle de ganhos</li>
+      <li><i class="fab fa-whatsapp"></i> Notificações via WhatsApp</li>
+      <li><i class="fas fa-share-alt"></i> Link profissional para compartilhar</li>
+    </ul>
+
+    <div class="preview-url">
+      <div class="label">Seu link profissional</div>
+      <div class="url">
+        <span class="slug-preview" id="preview-slug">seunome</span>.barbeariaos.com.br
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="compare-card active">
+        <div class="ct"><i class="fas fa-cut"></i> Barbeiro</div>
+        <div class="cn">Perfil individual, agenda pessoal</div>
+      </div>
+      <div class="compare-card">
+        <div class="ct"><i class="fas fa-store"></i> Barbearia</div>
+        <div class="cn">Equipe, estoque, financeiro</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIREITA (FORM) -->
+  <div class="right-panel">
+    <h2>Criar perfil de Barbeiro</h2>
+    <p class="sub">Já tem conta? <a href="/sistema/login">Entrar</a> &nbsp;|&nbsp; Tem uma barbearia? <a href="/cadastro/barbearia">Criar conta de barbearia</a></p>
+
+    <div class="trial-badge">
+      <i class="fas fa-gift"></i>
+      <span><strong>30 dias grátis</strong> — sem precisar de cartão de crédito</span>
+    </div>
+
+    <div class="alerts">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <form method="POST" action="/cadastro/barbeiro" id="form-barbeiro">
+      <div class="form-grid">
+
+        <div class="form-group full">
+          <label for="nome">Seu nome profissional <span class="req">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-user icon"></i>
+            <input type="text" id="nome" name="nome" placeholder="Ex: João Silva Barber"
+                   required value="{{ form_data.get('nome', '') }}" autocomplete="name">
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label for="slug">Seu subdomínio profissional <span class="req">*</span></label>
+          <div class="slug-field-wrap" id="slug-wrap">
+            <span class="slug-prefix">✂️</span>
+            <input type="text" id="slug" name="slug" class="slug-input no-icon"
+                   placeholder="joaosilva" required
+                   value="{{ form_data.get('slug', '') }}"
+                   autocomplete="off" autocorrect="off" spellcheck="false">
+            <span class="slug-status" id="slug-status"></span>
+          </div>
+          <span class="slug-hint">Seu link: <strong id="slug-hint-url">joaosilva.barbeariaos.com.br</strong></span>
+        </div>
+
+        <div class="form-group">
+          <label for="email">E-mail <span class="req">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope icon"></i>
+            <input type="email" id="email" name="email" placeholder="joao@email.com"
+                   required value="{{ form_data.get('email', '') }}" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="telefone">WhatsApp</label>
+          <div class="input-wrap">
+            <i class="fab fa-whatsapp icon"></i>
+            <input type="tel" id="telefone" name="telefone" placeholder="(11) 99999-9999"
+                   value="{{ form_data.get('telefone', '') }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="cidade">Cidade</label>
+          <div class="input-wrap">
+            <i class="fas fa-map-marker-alt icon"></i>
+            <input type="text" id="cidade" name="cidade" placeholder="São Paulo"
+                   value="{{ form_data.get('cidade', '') }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="instagram">Instagram</label>
+          <div class="input-wrap">
+            <i class="fab fa-instagram icon"></i>
+            <input type="text" id="instagram" name="instagram" placeholder="@joaobarber"
+                   value="{{ form_data.get('instagram', '') }}">
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label for="descricao">Mini bio profissional</label>
+          <div class="input-wrap">
+            <textarea id="descricao" name="descricao" class="no-icon"
+                      placeholder="Ex: Barbeiro especializado em cortes degradê e navalhado, 5 anos de experiência..."
+                      >{{ form_data.get('descricao', '') }}</textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha <span class="req">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-lock icon"></i>
+            <input type="password" id="senha" name="senha" placeholder="Mínimo 8 caracteres" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmar_senha">Confirmar senha <span class="req">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-lock icon"></i>
+            <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Repita a senha" required>
+          </div>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i class="fas fa-cut"></i>
+        Criar meu perfil grátis
+      </button>
+    </form>
+
+    <div class="divider">ou</div>
+    <div class="link-outro-tipo">
+      Gerencia uma barbearia com equipe? <a href="/cadastro/barbearia">Criar conta de Barbearia →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  let slugTimer;
+  const slugInput = document.getElementById('slug');
+  const slugStatus = document.getElementById('slug-status');
+  const slugWrap = document.getElementById('slug-wrap');
+  const previewSlug = document.getElementById('preview-slug');
+  const hintUrl = document.getElementById('slug-hint-url');
+  const nomeInput = document.getElementById('nome');
+
+  nomeInput.addEventListener('input', () => {
+    if (slugInput.value === '') {
+      const gerado = nomeInput.value
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '').trim()
+        .replace(/\s+/g, '-').substring(0, 40);
+      slugInput.value = gerado;
+      slugInput.dispatchEvent(new Event('input'));
+    }
+  });
+
+  slugInput.addEventListener('input', () => {
+    const val = slugInput.value.toLowerCase().replace(/[^a-z0-9\-]/g, '');
+    slugInput.value = val;
+    previewSlug.textContent = val || 'seuslug';
+    hintUrl.textContent = (val || 'seuslug') + '.barbeariaos.com.br';
+
+    clearTimeout(slugTimer);
+    if (val.length < 3) { slugStatus.textContent = ''; return; }
+
+    slugStatus.textContent = '⏳';
+    slugStatus.className = 'slug-status loading';
+
+    slugTimer = setTimeout(() => {
+      fetch('/cadastro/verificar-slug?slug=' + encodeURIComponent(val))
+        .then(r => r.json())
+        .then(data => {
+          slugStatus.textContent = data.mensagem;
+          slugStatus.className = 'slug-status ' + (data.disponivel ? 'ok' : 'err');
+          slugWrap.style.borderColor = data.disponivel ? 'var(--success)' : 'var(--danger)';
+        });
+    }, 500);
+  });
+
+  if (slugInput.value) slugInput.dispatchEvent(new Event('input'));
+</script>
+</body>
+</html>

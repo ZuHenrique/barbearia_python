@@ -1,0 +1,203 @@
+{% extends "painel/base.html" %}
+
+{% block title %}Agendamentos do Dia - BARBEARIA ZUH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; font-weight: 600; }
+    .badge-agendado   { background: #e0f0ff; color: #0369a1; }
+    .badge-confirmado { background: #d1fae5; color: #065f46; }
+    .badge-concluido  { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+    .badge-cancelado  { background: #fee2e2; color: #991b1b; }
+    .action-btn { padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .action-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+    .btn-confirmar { background: #0ea5e9; color: white; }
+    .btn-concluir  { background: #22c55e; color: white; }
+    .btn-cancelar  { background: #ef4444; color: white; }
+    .btn-editar    { background: #f59e0b; color: white; }
+    .hora-cell { font-size: 1.2rem; font-weight: 700; color: #0f3460; }
+    .card-agenda { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+    .filter-bar { background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    .today-nav button, .today-nav a { border-radius: 8px; }
+    .ag-row:hover { background: #f8faff; }
+    .modal-motivo { display:none; position:fixed; top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center; }
+    .modal-motivo.open { display:flex; }
+    .modal-box { background:white; padding:30px; border-radius:16px; width:400px; }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="fas fa-calendar-day me-2 text-primary"></i>Agendamentos</h3>
+    <a href="{{ url_for('agendamentos.novo') }}" class="btn btn-primary rounded-pill px-4">
+        <i class="fas fa-plus me-1"></i> Novo Agendamento
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="filter-bar">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">Data</label>
+            <input type="date" name="data" class="form-control form-control-sm" value="{{ data_filtro }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">Profissional</label>
+            <select name="funcionario_id" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                {% for f in funcionarios %}
+                <option value="{{ f.id }}" {% if funcionario_filtro == f.id|string %}selected{% endif %}>{{ f.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="Agendado"   {% if status_filtro == 'Agendado'   %}selected{% endif %}>Agendado</option>
+                <option value="Confirmado" {% if status_filtro == 'Confirmado' %}selected{% endif %}>Confirmado</option>
+                <option value="Concluido"  {% if status_filtro == 'Concluido'  %}selected{% endif %}>Concluído</option>
+                <option value="Cancelado"  {% if status_filtro == 'Cancelado'  %}selected{% endif %}>Cancelado</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm px-3">Filtrar</button>
+            <a href="{{ url_for('agendamentos.listar') }}" class="btn btn-outline-secondary btn-sm">Hoje</a>
+        </div>
+    </form>
+</div>
+
+<!-- Resumo do dia -->
+{% if agendamentos %}
+<div class="row mb-3 g-2">
+    {% set total = agendamentos|length %}
+    {% set concluidos = agendamentos|selectattr('status','equalto','Concluido')|list|length %}
+    {% set pendentes = agendamentos|selectattr('status','equalto','Agendado')|list|length %}
+    {% set cancelados = agendamentos|selectattr('status','equalto','Cancelado')|list|length %}
+    <div class="col-3"><div class="card text-center p-2 border-0 shadow-sm rounded-3"><div class="fw-bold fs-4">{{ total }}</div><small class="text-muted">Total</small></div></div>
+    <div class="col-3"><div class="card text-center p-2 border-0 shadow-sm rounded-3 bg-warning bg-opacity-10"><div class="fw-bold fs-4 text-warning">{{ pendentes }}</div><small class="text-muted">Aguardando</small></div></div>
+    <div class="col-3"><div class="card text-center p-2 border-0 shadow-sm rounded-3 bg-success bg-opacity-10"><div class="fw-bold fs-4 text-success">{{ concluidos }}</div><small class="text-muted">Concluídos</small></div></div>
+    <div class="col-3"><div class="card text-center p-2 border-0 shadow-sm rounded-3 bg-danger bg-opacity-10"><div class="fw-bold fs-4 text-danger">{{ cancelados }}</div><small class="text-muted">Cancelados</small></div></div>
+</div>
+{% endif %}
+
+<!-- Tabela de agendamentos -->
+<div class="card card-agenda">
+    <div class="card-body p-0">
+        {% if agendamentos %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Hora</th>
+                        <th>Cliente</th>
+                        <th>Profissional</th>
+                        <th>Serviço</th>
+                        <th>Status</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ag in agendamentos %}
+                    <tr class="ag-row">
+                        <td class="ps-3">
+                            <span class="hora-cell">
+                                {% if ag.hora is string %}{{ ag.hora[:5] }}{% else %}{{ ag.hora.strftime('%H:%M') }}{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ ag.cliente.nome if ag.cliente else '—' }}</div>
+                            <small class="text-muted">{{ ag.cliente.telefone if ag.cliente else '' }}</small>
+                        </td>
+                        <td>{{ ag.funcionario.nome if ag.funcionario else '—' }}</td>
+                        <td>
+                            <div>{{ ag.servico.nome if ag.servico else '—' }}</div>
+                            {% if ag.obs %}<small class="text-muted fst-italic">{{ ag.obs[:40] }}</small>{% endif %}
+                        </td>
+                        <td>
+                            {% if ag.status == 'Agendado' %}
+                                <span class="status-badge badge-agendado">⏳ Agendado</span>
+                            {% elif ag.status == 'Confirmado' %}
+                                <span class="status-badge badge-confirmado">✅ Confirmado</span>
+                            {% elif ag.status == 'Concluido' %}
+                                <span class="status-badge badge-concluido">💈 Concluído</span>
+                            {% elif ag.status == 'Cancelado' %}
+                                <span class="status-badge badge-cancelado">❌ Cancelado</span>
+                            {% else %}
+                                <span class="status-badge badge-agendado">{{ ag.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                {% if ag.status in ['Agendado'] %}
+                                <form method="POST" action="{{ url_for('agendamentos.confirmar', id=ag.id) }}" style="display:inline;">
+                                    <button class="action-btn btn-confirmar" title="Confirmar chegada do cliente">
+                                        <i class="fas fa-check"></i> Chegou
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% if ag.status in ['Agendado', 'Confirmado'] %}
+                                <form method="POST" action="{{ url_for('agendamentos.concluir', id=ag.id) }}" style="display:inline;">
+                                    <button class="action-btn btn-concluir" title="Marcar serviço como concluído">
+                                        <i class="fas fa-scissors"></i> Concluir
+                                    </button>
+                                </form>
+                                <button class="action-btn btn-cancelar" onclick="abrirCancelar({{ ag.id }})" title="Cancelar agendamento">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                {% endif %}
+                                <a href="{{ url_for('agendamentos.editar', id=ag.id) }}" class="action-btn btn-editar text-decoration-none" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum agendamento para este dia</h5>
+            <a href="{{ url_for('agendamentos.novo') }}" class="btn btn-primary mt-2">
+                <i class="fas fa-plus me-1"></i> Criar Agendamento
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Cancelamento -->
+<div class="modal-motivo" id="modalCancelar">
+    <div class="modal-box">
+        <h5 class="mb-3"><i class="fas fa-times-circle text-danger me-2"></i>Cancelar Agendamento</h5>
+        <form method="POST" id="formCancelar">
+            <div class="mb-3">
+                <label class="form-label">Motivo (opcional)</label>
+                <input type="text" name="motivo" class="form-control" placeholder="Ex: cliente desmarcou, sem vaga...">
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-outline-secondary" onclick="fecharCancelar()">Voltar</button>
+                <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function abrirCancelar(id) {
+    document.getElementById('formCancelar').action = `/sistema/painel/agendamentos/${id}/cancelar`;
+    document.getElementById('modalCancelar').classList.add('open');
+}
+function fecharCancelar() {
+    document.getElementById('modalCancelar').classList.remove('open');
+}
+document.getElementById('modalCancelar').addEventListener('click', function(e) {
+    if (e.target === this) fecharCancelar();
+});
+</script>
+{% endblock %}

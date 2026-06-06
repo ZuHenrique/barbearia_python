@@ -1,0 +1,37 @@
+{% extends "painel/base.html" %}
+{% block title %}Nova Conta a Receber{% endblock %}
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-plus-circle me-2 text-success"></i>Nova Conta a Receber</h3>
+    <a href="{{ url_for('financeiro.receber') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+</div>
+<div class="card border-0 shadow-sm rounded-4" style="max-width:560px;">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Descrição *</label>
+                <input type="text" name="descricao" class="form-control" required placeholder="Ex: Corte de cabelo - João">
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Valor (R$) *</label>
+                    <input type="number" name="valor" class="form-control" step="0.01" min="0.01" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tipo</label>
+                    <select name="tipo" class="form-select">
+                        <option value="Serviço">Serviço</option>
+                        <option value="Produto">Produto</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Data de Vencimento *</label>
+                <input type="date" name="data_venc" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100 rounded-pill">Salvar Conta</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

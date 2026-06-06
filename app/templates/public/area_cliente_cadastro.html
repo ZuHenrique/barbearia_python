@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro de Cliente - BARBEARIA ZUH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+        overflow: hidden;
+    }
+    .auth-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        padding: 35px 30px;
+        text-align: center;
+    }
+    .auth-header .scissors-icon {
+        font-size: 3rem;
+        color: #e94560;
+        margin-bottom: 10px;
+    }
+    .auth-header h4 {
+        color: white;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+    .auth-header p {
+        color: rgba(255,255,255,0.65);
+        margin: 5px 0 0;
+        font-size: 0.9rem;
+    }
+    .auth-body {
+        padding: 35px 35px;
+        background: white;
+    }
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #eee;
+        padding: 12px 15px;
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        border-color: #0f3460;
+        box-shadow: 0 0 0 0.2rem rgba(15,52,96,0.15);
+    }
+    .btn-cadastrar {
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+    .btn-cadastrar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(56,239,125,0.35);
+        color: white;
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: #aaa;
+        font-size: 0.85rem;
+        margin: 20px 0;
+    }
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #eee;
+    }
+    .btn-social {
+        border-radius: 10px;
+        padding: 11px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn-google {
+        background: white;
+        border: 2px solid #ddd;
+        color: #444;
+    }
+    .btn-google:hover {
+        border-color: #EA4335;
+        color: #EA4335;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(234,67,53,0.2);
+    }
+    .btn-facebook {
+        background: white;
+        border: 2px solid #ddd;
+        color: #444;
+    }
+    .btn-facebook:hover {
+        border-color: #1877F2;
+        color: #1877F2;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(24,119,242,0.2);
+    }
+    .auth-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    .auth-footer a {
+        color: #0f3460;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+    .label-input {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #444;
+        margin-bottom: 5px;
+    }
+    .social-note {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 10px;
+        padding: 12px 15px;
+        font-size: 0.82rem;
+        color: #0369a1;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="min-height: 80vh; display: flex; align-items: center;">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-5 col-lg-5">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="scissors-icon"><i class="fas fa-cut"></i></div>
+                    <h4>Criar Conta de Cliente</h4>
+                    <p>Cadastre-se para agendar e acompanhar seus serviços</p>
+                </div>
+                <div class="auth-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} py-2 mb-3">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Rápido com Redes Sociais -->
+                    <div class="social-note">
+                        <i class="fas fa-bolt"></i> Cadastro rápido com sua conta existente:
+                    </div>
+
+                    <a href="{{ url_for('area_cliente.login_google') }}" class="btn-social btn-google mb-3 d-block">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google">
+                        Cadastrar com Google
+                    </a>
+                    <a href="{{ url_for('area_cliente.login_facebook') }}" class="btn-social btn-facebook mb-3 d-block">
+                        <i class="fab fa-facebook" style="color: #1877F2; font-size: 1.2rem;"></i>
+                        Cadastrar com Facebook
+                    </a>
+
+                    <div class="divider">ou preencha o formulário</div>
+
+                    <!-- Formulário Manual -->
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="label-input">Nome Completo</label>
+                            <input type="text" name="nome" class="form-control" required placeholder="Como quer ser chamado?">
+                        </div>
+                        <div class="mb-3">
+                            <label class="label-input">Email</label>
+                            <input type="email" name="email" class="form-control" required placeholder="seu@email.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="label-input">Telefone / WhatsApp</label>
+                            <input type="tel" name="telefone" class="form-control" required placeholder="(11) 99999-9999">
+                        </div>
+                        <div class="mb-4">
+                            <label class="label-input">Crie uma Senha</label>
+                            <input type="password" name="senha" class="form-control" required placeholder="Mínimo 6 caracteres">
+                        </div>
+                        <button type="submit" class="btn btn-cadastrar w-100">
+                            <i class="fas fa-check-circle me-2"></i> Criar minha conta
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        Já tem uma conta? <a href="{{ url_for('area_cliente.login') }}">Entrar agora</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

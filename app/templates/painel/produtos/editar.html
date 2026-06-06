@@ -1,0 +1,104 @@
+{% extends "painel/base.html" %}
+{% block title %}Editar {{ produto.nome }}{% endblock %}
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-edit me-2 text-warning"></i>Editar Produto</h3>
+    <a href="{{ url_for('produtos.listar') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+</div>
+
+<!-- Status card -->
+{% set margem_atual = ((produto.valor_venda - produto.valor_compra) / produto.valor_venda * 100) if produto.valor_venda > 0 else 0 %}
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3" style="max-width:680px;background:linear-gradient(135deg,#f8faff,#fff7ed);">
+    <div class="d-flex align-items-center gap-3">
+        <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#0f3460,#1d4ed8);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;">
+            <i class="fas fa-box-open"></i>
+        </div>
+        <div>
+            <div class="fw-bold">{{ produto.nome }}</div>
+            <small class="text-muted">Estoque: <strong {% if produto.estoque <= 0 %}class="text-danger"{% elif produto.estoque <= produto.nivel_estoque %}class="text-warning"{% else %}class="text-success"{% endif %}>{{ produto.estoque }} un</strong>
+            | Margem: <strong class="text-success">{{ "%.0f"|format(margem_atual) }}%</strong></small>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4" style="max-width:680px;">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Nome do Produto *</label>
+                    <input type="text" name="nome" class="form-control" required value="{{ produto.nome }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Categoria</label>
+                    <select name="categoria_id" class="form-select">
+                        <option value="">Sem categoria</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.id }}" {% if produto.categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Estoque Atual</label>
+                    <input type="number" name="estoque" class="form-control" min="0" value="{{ produto.estoque }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Estoque Mínimo</label>
+                    <input type="number" name="nivel_estoque" class="form-control" min="0" value="{{ produto.nivel_estoque }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Custo (Compra) *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" name="valor_compra" id="vcompra" class="form-control" step="0.01" required value="{{ produto.valor_compra }}" oninput="calcMargem()">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Preço de Venda *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" name="valor_venda" id="vvenda" class="form-control" step="0.01" required value="{{ produto.valor_venda }}" oninput="calcMargem()">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Margem de Lucro</label>
+                    <div class="input-group">
+                        <input type="text" id="margem" class="form-control bg-light fw-bold text-success" readonly value="{{ "%.1f"|format(margem_atual) }}">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Descrição</label>
+                    <textarea name="descricao" class="form-control" rows="3">{{ produto.descricao or '' }}</textarea>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-warning px-5 rounded-pill fw-semibold">
+                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                </button>
+                <form method="POST" action="{{ url_for('produtos.excluir', id=produto.id) }}"
+                      onsubmit="return confirm('Excluir {{ produto.nome }}?')">
+                    <button type="submit" class="btn btn-outline-danger rounded-pill">
+                        <i class="fas fa-trash me-1"></i>Excluir
+                    </button>
+                </form>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function calcMargem() {
+    const compra = parseFloat(document.getElementById('vcompra').value) || 0;
+    const venda  = parseFloat(document.getElementById('vvenda').value) || 0;
+    const el = document.getElementById('margem');
+    if (venda > 0 && compra > 0) {
+        const m = ((venda - compra) / venda * 100).toFixed(1);
+        el.value = m;
+        el.className = 'form-control bg-light fw-bold ' + (m >= 0 ? 'text-success' : 'text-danger');
+    }
+}
+</script>
+{% endblock %}

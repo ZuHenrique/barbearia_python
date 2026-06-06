@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="painel-layout">
+
+  <!-- ── Overlay mobile ──────────────────────────────────── -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="painel-sidebar" id="painelSidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <i class="fas fa-cut"></i>
+        <span>BARBEARIA ZUH</span>
+      </div>
+      <button class="sidebar-close" onclick="closeSidebar()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/sistema/painel" class="sidebar-link {% if request.path == '/sistema/painel' or request.path == '/sistema/painel/' %}active{% endif %}">
+        <i class="fas fa-home"></i><span>Dashboard</span>
+      </a>
+      <a href="/sistema/painel/agendamentos" class="sidebar-link {% if 'agendamentos' in request.path %}active{% endif %}">
+        <i class="fas fa-calendar-check"></i><span>Agendamentos</span>
+      </a>
+      <a href="/sistema/painel/clientes" class="sidebar-link {% if 'clientes' in request.path %}active{% endif %}">
+        <i class="fas fa-users"></i><span>Clientes</span>
+      </a>
+      <a href="/sistema/painel/usuarios" class="sidebar-link {% if 'usuarios' in request.path %}active{% endif %}">
+        <i class="fas fa-user-tie"></i><span>Usuários</span>
+      </a>
+      <a href="/sistema/painel/servicos" class="sidebar-link {% if 'servicos' in request.path %}active{% endif %}">
+        <i class="fas fa-cut"></i><span>Serviços</span>
+      </a>
+      <a href="/sistema/painel/produtos" class="sidebar-link {% if 'produtos' in request.path %}active{% endif %}">
+        <i class="fas fa-box"></i><span>Produtos</span>
+      </a>
+      <a href="/sistema/painel/financeiro/receber" class="sidebar-link {% if 'financeiro' in request.path %}active{% endif %}">
+        <i class="fas fa-dollar-sign"></i><span>Financeiro</span>
+      </a>
+      <a href="/sistema/painel/relatorios" class="sidebar-link {% if 'relatorios' in request.path %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i><span>Relatórios</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/sistema/perfil" class="sidebar-link">
+        <i class="fas fa-user-circle"></i><span>Perfil</span>
+      </a>
+      <a href="/sistema/logout" class="sidebar-link text-danger-link">
+        <i class="fas fa-sign-out-alt"></i><span>Sair</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────── -->
+  <div class="painel-main">
+    <!-- Topbar mobile -->
+    <div class="painel-topbar">
+      <button class="topbar-menu-btn" onclick="openSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <span class="topbar-title">
+        <i class="fas fa-cut me-2" style="color:#7c3aed;"></i>BARBEARIA ZUH
+      </span>
+      <a href="/sistema/logout" class="topbar-logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+    </div>
+
+    <div class="painel-content">
+      {% block painel_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── Layout ──────────────────────────────────────────────── */
+.painel-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.painel-sidebar {
+  width: 230px;
+  min-width: 230px;
+  background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: transform .3s ease;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -.3px;
+}
+.sidebar-brand i { color: #a78bfa; font-size: 1.1rem; }
+.sidebar-close {
+  display: none;
+  background: none; border: none;
+  color: rgba(255,255,255,.6);
+  font-size: 1.1rem; cursor: pointer;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: rgba(255,255,255,.7);
+  text-decoration: none;
+  font-size: .88rem;
+  font-weight: 500;
+  transition: background .2s, color .2s;
+}
+.sidebar-link i { width: 18px; text-align: center; font-size: .9rem; }
+.sidebar-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+.sidebar-link.active { background: rgba(167,139,250,.2); color: #a78bfa; font-weight: 700; }
+.sidebar-link.text-danger-link { color: #f87171; }
+.sidebar-link.text-danger-link:hover { background: rgba(248,113,113,.15); }
+
+.sidebar-footer {
+  padding: 10px 10px 16px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Main ────────────────────────────────────────────────── */
+.painel-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.painel-topbar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.topbar-menu-btn {
+  background: none; border: none;
+  font-size: 1.2rem; color: #374151;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 8px;
+}
+.topbar-menu-btn:hover { background: #f3f4f6; }
+.topbar-title { flex: 1; font-weight: 700; font-size: .95rem; color: #1e1b4b; }
+.topbar-logout { color: #9ca3af; font-size: 1rem; }
+.topbar-logout:hover { color: #ef4444; }
+
+.painel-content {
+  padding: 28px;
+  flex: 1;
+}
+
+/* ── Overlay ─────────────────────────────────────────────── */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 99;
+}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .painel-sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    transform: translateX(-100%);
+    z-index: 200;
+    width: 240px;
+    min-width: 240px;
+  }
+  .painel-sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay.open { display: block; }
+  .sidebar-close { display: block; }
+  .painel-topbar { display: flex; }
+  .painel-content { padding: 16px; }
+}
+
+@media (min-width: 769px) {
+  .painel-topbar { display: none !important; }
+}
+</style>
+
+<script>
+function openSidebar() {
+  document.getElementById('painelSidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('painelSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Fechar ao pressionar ESC
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+</script>
+
+{% endblock %}
+
+{% block navbar %}{% endblock %}

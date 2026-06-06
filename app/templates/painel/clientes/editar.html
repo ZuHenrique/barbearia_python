@@ -1,0 +1,65 @@
+{% extends "painel/base.html" %}
+{% block title %}Editar Cliente - {{ cliente.nome }}{% endblock %}
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-user-edit me-2 text-warning"></i>Editar Cliente</h3>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('clientes.ver', id=cliente.id) }}" class="btn btn-outline-primary rounded-pill">Ver Perfil</a>
+        <a href="{{ url_for('clientes.listar') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4" style="max-width:680px;">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Nome Completo *</label>
+                    <input type="text" name="nome" class="form-control" required value="{{ cliente.nome }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Data de Nascimento</label>
+                    <input type="date" name="data_nasc" class="form-control" value="{{ cliente.data_nasc.isoformat() if cliente.data_nasc else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Telefone / WhatsApp *</label>
+                    <input type="tel" name="telefone" class="form-control" required value="{{ cliente.telefone }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ cliente.email or '' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Endereço</label>
+                    <input type="text" name="endereco" class="form-control" value="{{ cliente.endereco or '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Pontos de Fidelidade <span class="text-muted">(⭐)</span></label>
+                    <input type="number" name="cartoes" class="form-control" min="0" value="{{ cliente.cartoes or 0 }}">
+                    <small class="text-muted">Ajuste manualmente se necessário</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Alertas de Retorno</label>
+                    <select name="alertado" class="form-select">
+                        <option value="Não" {% if cliente.alertado == 'Não' %}selected{% endif %}>Não enviar</option>
+                        <option value="WhatsApp" {% if cliente.alertado == 'WhatsApp' %}selected{% endif %}>Via WhatsApp</option>
+                        <option value="Email" {% if cliente.alertado == 'Email' %}selected{% endif %}>Via Email</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-warning px-5 rounded-pill fw-semibold">
+                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                </button>
+                <form method="POST" action="{{ url_for('clientes.excluir', id=cliente.id) }}"
+                      onsubmit="return confirm('Excluir {{ cliente.nome }}? Os agendamentos relacionados também serão removidos!')">
+                    <button type="submit" class="btn btn-outline-danger rounded-pill">
+                        <i class="fas fa-trash me-1"></i>Excluir Cliente
+                    </button>
+                </form>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

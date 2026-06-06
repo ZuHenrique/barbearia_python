@@ -1,0 +1,59 @@
+{% extends "painel/base.html" %}
+{% block title %}Saídas de Estoque{% endblock %}
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-exchange-alt me-2 text-info"></i>Movimentações de Estoque</h3>
+    <a href="{{ url_for('produtos.listar') }}" class="btn btn-outline-secondary rounded-pill">← Produtos</a>
+</div>
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('produtos.entradas') }}">
+            <i class="fas fa-arrow-down text-success me-1"></i>Entradas
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('produtos.saidas') }}">
+            <i class="fas fa-arrow-up text-danger me-1"></i>Saídas
+        </a>
+    </li>
+</ul>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        {% if saidas.items %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Data</th>
+                        <th>Produto</th>
+                        <th class="text-center">Quantidade</th>
+                        <th>Motivo</th>
+                        <th>Registrado por</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in saidas.items %}
+                    <tr>
+                        <td class="ps-3 text-muted">{{ s.data.strftime('%d/%m/%Y %H:%M') if s.data else '—' }}</td>
+                        <td class="fw-semibold">{{ s.produto.nome if s.produto else '—' }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-danger fs-6">-{{ s.quantidade }}</span>
+                        </td>
+                        <td>{{ s.motivo or '—' }}</td>
+                        <td>{{ s.usuario.nome if s.usuario else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <h5>Nenhuma saída registrada</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

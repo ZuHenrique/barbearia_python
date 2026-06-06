@@ -1,0 +1,221 @@
+{% extends "painel/base.html" %}
+{% block title %}Editar Agendamento #{{ agendamento.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card { border:none; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.07); }
+    .section-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#9ca3af; font-weight:700; margin-bottom:12px; }
+    .form-control:focus, .form-select:focus { border-color:#0f3460; box-shadow:0 0 0 .2rem rgba(15,52,96,.12); }
+    .hora-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .hora-btn { padding:8px; border:2px solid #e5e7eb; border-radius:8px; text-align:center; cursor:pointer; transition:.2s; font-weight:600; font-size:.9rem; background:white; }
+    .hora-btn:hover { border-color:#0f3460; color:#0f3460; }
+    .hora-btn.selected { border-color:#0f3460; background:#0f3460; color:white; }
+    .status-select option { font-weight:600; }
+</style>
+{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-calendar-edit me-2 text-warning"></i>Editar Agendamento <small class="text-muted fs-6">#{{ agendamento.id }}</small></h3>
+    <a href="{{ url_for('agendamentos.listar') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+</div>
+
+<!-- Info atual destacada -->
+<div class="card form-card mb-4 p-3" style="background:linear-gradient(135deg,#f8faff,#fefce8);">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div>
+            <div class="text-muted small">Cliente</div>
+            <div class="fw-bold">{{ agendamento.cliente.nome if agendamento.cliente else '—' }}</div>
+        </div>
+        <div class="border-start border-2 ps-3">
+            <div class="text-muted small">Data/Hora atual</div>
+            <div class="fw-bold">{{ agendamento.data.strftime('%d/%m/%Y') }} às {% if agendamento.hora is string %}{{ agendamento.hora[:5] }}{% else %}{{ agendamento.hora.strftime('%H:%M') }}{% endif %}</div>
+        </div>
+        <div class="border-start border-2 ps-3">
+            <div class="text-muted small">Status atual</div>
+            <div class="fw-bold">
+                {% if agendamento.status == 'Concluido' %}<span class="text-success">✅ Concluído</span>
+                {% elif agendamento.status == 'Cancelado' %}<span class="text-danger">❌ Cancelado</span>
+                {% elif agendamento.status == 'Confirmado' %}<span class="text-info">✅ Confirmado</span>
+                {% else %}<span class="text-warning">⏳ Agendado</span>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="POST" id="formEditar">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Profissional e Serviço -->
+            <div class="card form-card mb-4 p-4">
+                <p class="section-label"><i class="fas fa-user-tie me-1"></i>Profissional e Serviço</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Profissional *</label>
+                        <select name="funcionario_id" id="funcionario_select" class="form-select" required onchange="verificarHorarios()">
+                            {% for f in funcionarios %}
+                            <option value="{{ f.id }}" {% if agendamento.funcionario_id == f.id %}selected{% endif %}>{{ f.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Serviço *</label>
+                        <select name="servico_id" class="form-select" required>
+                            {% for s in servicos %}
+                            <option value="{{ s.id }}" {% if agendamento.servico_id == s.id %}selected{% endif %}>{{ s.nome }} — R$ {{ "%.2f"|format(s.valor) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data, Hora e Status -->
+            <div class="card form-card mb-4 p-4">
+                <p class="section-label"><i class="fas fa-clock me-1"></i>Data, Hora e Status</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Data *</label>
+                        <input type="date" name="data" id="data_input" class="form-control" required
+                               value="{{ agendamento.data.isoformat() }}" onchange="verificarHorarios()">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Horário Atual</label>
+                        <input type="text" class="form-control bg-light" value="{% if agendamento.hora is string %}{{ agendamento.hora[:5] }}{% else %}{{ agendamento.hora.strftime('%H:%M') }}{% endif %}" readonly>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Selecionar Novo Horário</label>
+                        <input type="hidden" name="hora" id="hora_hidden"
+                               value="{% if agendamento.hora is string %}{{ agendamento.hora[:5] }}{% else %}{{ agendamento.hora.strftime('%H:%M') }}{% endif %}">
+                        <div id="loading-horas" style="display:none;" class="text-muted small py-1">
+                            <i class="fas fa-spinner fa-spin me-1"></i> Carregando horários...
+                        </div>
+                        <div id="hora-grid" class="hora-grid mt-2"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Status do Agendamento</label>
+                        <select name="status" class="form-select status-select">
+                            {% for st in ['Agendado', 'Confirmado', 'Concluido', 'Cancelado'] %}
+                            <option value="{{ st }}" {% if agendamento.status == st %}selected{% endif %}>{{ st }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observações -->
+            <div class="card form-card mb-4 p-4">
+                <p class="section-label"><i class="fas fa-sticky-note me-1"></i>Observações</p>
+                <textarea name="obs" class="form-control" rows="3" placeholder="Alguma observação...">{{ agendamento.obs or '' }}</textarea>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-warning flex-grow-1 rounded-pill py-3 fw-bold">
+                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                </button>
+                <form method="POST" action="{{ url_for('agendamentos.excluir', id=agendamento.id) }}"
+                      onsubmit="return confirm('Excluir este agendamento definitivamente?')">
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4 py-3">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ações rápidas no lado direito -->
+        <div class="col-lg-4">
+            <div class="card form-card p-4">
+                <p class="section-label"><i class="fas fa-bolt me-1"></i>Ações Rápidas</p>
+
+                {% if agendamento.status == 'Agendado' %}
+                <form method="POST" action="{{ url_for('agendamentos.confirmar', id=agendamento.id) }}" class="mb-2">
+                    <button class="btn btn-info w-100 rounded-pill">
+                        <i class="fas fa-check me-2"></i>Cliente Chegou
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if agendamento.status in ['Agendado', 'Confirmado'] %}
+                <form method="POST" action="{{ url_for('agendamentos.concluir', id=agendamento.id) }}" class="mb-2">
+                    <button class="btn btn-success w-100 rounded-pill">
+                        <i class="fas fa-scissors me-2"></i>Concluir Serviço
+                    </button>
+                </form>
+                <button class="btn btn-danger w-100 rounded-pill mb-2" onclick="document.getElementById('modal-cancelar').style.display='flex'">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                {% endif %}
+
+                <hr>
+                {% if agendamento.cliente %}
+                <a href="{{ url_for('clientes.ver', id=agendamento.cliente_id) }}"
+                   class="btn btn-outline-primary w-100 rounded-pill mb-2">
+                    <i class="fas fa-user me-2"></i>Ver Perfil do Cliente
+                </a>
+                <a href="https://wa.me/55{{ agendamento.cliente.telefone | replace('(','') | replace(')','') | replace(' ','') | replace('-','') }}?text=Olá {{ agendamento.cliente.nome }}! Confirmando seu agendamento no dia {{ agendamento.data.strftime('%d/%m') }}."
+                   target="_blank" class="btn btn-outline-success w-100 rounded-pill">
+                    <i class="fab fa-whatsapp me-2"></i>WhatsApp Cliente
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Modal cancelar -->
+<div id="modal-cancelar" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:white;padding:30px;border-radius:16px;width:400px;max-width:90%;">
+        <h5 class="mb-3"><i class="fas fa-times-circle text-danger me-2"></i>Cancelar Agendamento</h5>
+        <form method="POST" action="{{ url_for('agendamentos.cancelar', id=agendamento.id) }}">
+            <div class="mb-3">
+                <label class="form-label">Motivo (opcional)</label>
+                <input type="text" name="motivo" class="form-control" placeholder="Ex: cliente desmarcou...">
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('modal-cancelar').style.display='none'">Voltar</button>
+                <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function verificarHorarios() {
+    const funcId = document.getElementById('funcionario_select').value;
+    const data   = document.getElementById('data_input').value;
+    const grid   = document.getElementById('hora-grid');
+    const loading = document.getElementById('loading-horas');
+    const horaAtual = document.getElementById('hora_hidden').value;
+
+    grid.innerHTML = '';
+    if (!funcId || !data) return;
+
+    loading.style.display = 'block';
+    try {
+        const resp = await fetch(`/api/horarios/${funcId}/${data}`);
+        const json = await resp.json();
+        loading.style.display = 'none';
+        if (json.data && json.data.length > 0) {
+            // Adicionar a hora atual caso não esteja na lista (já ocupada por si mesma)
+            const horas = json.data.includes(horaAtual) ? json.data : [horaAtual, ...json.data].sort();
+            horas.forEach(h => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'hora-btn' + (h === horaAtual ? ' selected' : '');
+                btn.textContent = h;
+                btn.onclick = () => {
+                    document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    document.getElementById('hora_hidden').value = h;
+                };
+                grid.appendChild(btn);
+            });
+        }
+    } catch(e) { loading.style.display = 'none'; }
+}
+
+// Carregar horários ao abrir a página
+verificarHorarios();
+</script>
+{% endblock %}

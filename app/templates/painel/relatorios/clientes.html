@@ -1,0 +1,64 @@
+{% extends "painel/base.html" %}
+{% block title %}Relatório de Clientes{% endblock %}
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="fas fa-users me-2 text-info"></i>Relatório de Clientes</h3>
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-outline-secondary rounded-pill">← Relatórios</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+            <div class="h3 fw-bold text-info">{{ total_clientes }}</div>
+            <small class="text-muted">Total de Clientes</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+            <div class="h3 fw-bold text-success">{{ clientes | selectattr('cartoes','>', 0) | list | length }}</div>
+            <small class="text-muted">Com Fidelidade</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+            <div class="h3 fw-bold text-primary">{{ clientes | sum(attribute='cartoes') }}</div>
+            <small class="text-muted">Total de Pontos</small>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Nome</th>
+                        <th>Telefone</th>
+                        <th>Email</th>
+                        <th class="text-center">Pontos Fidelidade</th>
+                        <th>Cadastrado em</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr>
+                        <td class="ps-3 fw-semibold">{{ c.nome }}</td>
+                        <td>{{ c.telefone }}</td>
+                        <td>{{ c.email or '—' }}</td>
+                        <td class="text-center">
+                            {% if c.cartoes > 0 %}
+                            <span class="badge bg-warning text-dark">⭐ {{ c.cartoes }}</span>
+                            {% else %}
+                            <span class="text-muted">0</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ c.data_cad.strftime('%d/%m/%Y') if c.data_cad else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

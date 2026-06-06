@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Painel - BARBEARIA ZUH{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5" style="min-height: 60vh;">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <div class="display-1 text-primary mb-3">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h5>{{ current_user.nome }}</h5>
+                    <p class="text-muted mb-3">{{ current_user.email }}</p>
+                    <hr>
+                    <div class="d-grid">
+                        <a href="{{ url_for('area_cliente.logout') }}" class="btn btn-outline-danger btn-sm">Sair</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Fidelidade</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="display-4 text-success">{{ current_user.cartoes }}</h2>
+                    <p class="text-muted">Pontos acumulados</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <h3 class="mb-4">Meus Agendamentos</h3>
+            
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    {% if agendamentos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Hora</th>
+                                        <th>Serviço</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ag in agendamentos %}
+                                    <tr>
+                                        <td>{{ ag.data.strftime('%d/%m/%Y') }}</td>
+                                        <td>{{ ag.hora.strftime('%H:%M') }}</td>
+                                        <td>{{ ag.servico.nome if ag.servico else 'Serviço' }}</td>
+                                        <td>
+                                            {% if ag.status == 'Agendado' %}
+                                                <span class="badge bg-info">Agendado</span>
+                                            {% elif ag.status == 'Concluído' %}
+                                                <span class="badge bg-success">Concluído</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ ag.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p class="lead">Você ainda não possui agendamentos.</p>
+                            <a href="/agendamentos" class="btn btn-primary mt-2">Agendar Agora</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

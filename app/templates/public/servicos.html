@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Serviços - BARBEARIA ZUH{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Nossos Serviços</h1>
+    
+    <div class="row">
+        {% for servico in servicos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if servico.foto %}
+                <img src="{{ url_for('static', filename='uploads/' + servico.foto) }}" class="card-img-top" alt="{{ servico.nome }}">
+                {% else %}
+                <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-image text-white" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ servico.nome }}</h5>
+                    <p class="card-text">{{ servico.descricao or '' }}</p>
+                    <p class="text-primary fw-bold">R$ {{ "%.2f"|format(servico.valor) }}</p>
+                    {% if servico.dias_retorno %}
+                    <small class="text-muted">Retorno recomendado: {{ servico.dias_retorno }} dias</small>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="/agendamentos" class="btn btn-primary w-100">Agendar</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

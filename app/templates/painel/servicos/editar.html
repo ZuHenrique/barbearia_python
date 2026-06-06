@@ -1,0 +1,92 @@
+{% extends "painel/base.html" %}
+{% block title %}Editar Serviço - {{ servico.nome }}{% endblock %}
+
+{% block painel_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-edit me-2 text-warning"></i>Editar Serviço</h3>
+    <a href="{{ url_for('servicos.listar') }}" class="btn btn-outline-secondary rounded-pill">← Voltar</a>
+</div>
+
+<!-- Card de info rápida -->
+<div class="alert border-0 shadow-sm rounded-4 mb-4 p-3" style="max-width:680px; background:linear-gradient(135deg,#f8faff,#fff7ed);">
+    <div class="d-flex align-items-center gap-3">
+        <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#0f3460,#e94560);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;">
+            <i class="fas fa-scissors"></i>
+        </div>
+        <div>
+            <div class="fw-bold">{{ servico.nome }}</div>
+            <small class="text-muted">Valor atual: <strong class="text-success">R$ {{ "%.2f"|format(servico.valor) }}</strong> | Comissão: R$ {{ "%.2f"|format(servico.valor_comissao or 0) }}</small>
+        </div>
+        <div class="ms-auto">
+            {% if servico.ativo == 'Sim' %}
+            <span style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:700;">● Ativo</span>
+            {% else %}
+            <span style="background:#fee2e2;color:#991b1b;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:700;">● Inativo</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4" style="max-width:680px;">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Nome do Serviço *</label>
+                    <input type="text" name="nome" class="form-control" required value="{{ servico.nome }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Categoria</label>
+                    <select name="categoria_id" class="form-select">
+                        <option value="">Sem categoria</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.id }}" {% if servico.categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select name="ativo" class="form-select">
+                        <option value="Sim" {% if servico.ativo == 'Sim' %}selected{% endif %}>Ativo</option>
+                        <option value="Não" {% if servico.ativo != 'Sim' %}selected{% endif %}>Inativo</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Valor do Serviço (R$) *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" name="valor" class="form-control" step="0.01" min="0.01" required value="{{ servico.valor }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Comissão do Barbeiro (R$)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" name="valor_comissao" class="form-control" step="0.01" min="0" value="{{ servico.valor_comissao or 0 }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Retorno Sugerido (dias)</label>
+                    <input type="number" name="dias_retorno" class="form-control" min="1" max="365" value="{{ servico.dias_retorno or 30 }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Descrição</label>
+                    <textarea name="descricao" class="form-control" rows="3">{{ servico.descricao or '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-warning px-5 rounded-pill fw-semibold">
+                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                </button>
+                <form method="POST" action="{{ url_for('servicos.excluir', id=servico.id) }}"
+                      onsubmit="return confirm('Excluir {{ servico.nome }}? Isto pode afetar agendamentos existentes.')">
+                    <button type="submit" class="btn btn-outline-danger rounded-pill">
+                        <i class="fas fa-trash me-1"></i>Excluir
+                    </button>
+                </form>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

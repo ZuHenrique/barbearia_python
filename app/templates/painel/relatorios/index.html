@@ -1,0 +1,53 @@
+{% extends "painel/base.html" %}
+{% block title %}Relatórios - BARBEARIA ZUH{% endblock %}
+{% block painel_content %}
+<h3 class="mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i>Relatórios</h3>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <a href="{{ url_for('relatorios.agendamentos') }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 text-center" style="transition:.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
+                <h5 class="fw-bold">Agendamentos</h5>
+                <p class="text-muted small">Histórico completo de agendamentos por período</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('relatorios.financeiro') }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 text-center" style="transition:.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                <h5 class="fw-bold">Financeiro</h5>
+                <p class="text-muted small">Receitas, despesas e lucro no período</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('relatorios.comissoes') }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 text-center" style="transition:.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <i class="fas fa-hand-holding-usd fa-3x text-warning mb-3"></i>
+                <h5 class="fw-bold">Comissões</h5>
+                <p class="text-muted small">Comissões por profissional no período</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('relatorios.clientes') }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 text-center" style="transition:.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <i class="fas fa-users fa-3x text-info mb-3"></i>
+                <h5 class="fw-bold">Clientes</h5>
+                <p class="text-muted small">Base de clientes e frequência de visitas</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('relatorios.vendas') }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 text-center" style="transition:.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                <i class="fas fa-shopping-bag fa-3x text-danger mb-3"></i>
+                <h5 class="fw-bold">Vendas de Produtos</h5>
+                <p class="text-muted small">Histórico de vendas de produtos</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
