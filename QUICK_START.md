@@ -1,165 +1,145 @@
-# GUIA RÁPIDO DE USO - Barbearia PRO (Python)
+# Guia Rapido - Barbearia Python
 
-## ⚡ Início Rápido (5 minutos)
+## Inicio rapido
 
-### 1. Preparação do Ambiente
+### 1. Preparar ambiente
+
 ```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-
-# Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configurar Banco de Dados
+### 2. Configurar variaveis
+
 ```bash
-# Editar config.py com suas credenciais MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/barbearia'
+copy .env.example .env
 ```
 
-### 3. Inicializar com Dados de Teste
+O app usa SQLite por padrao. Para usar MySQL, configure `DATABASE_URL` no `.env`:
+
+```env
+DATABASE_URL=mysql+pymysql://root:senha@localhost/barbearia
+```
+
+### 3. Inicializar banco com dados de teste
+
 ```bash
 python init_db.py
 ```
 
-### 4. Iniciar a Aplicação
+### 4. Iniciar aplicacao
+
 ```bash
 python run.py
 ```
 
-Acesse: **http://localhost:5000**
+Acesse:
 
----
-
-## 🔐 Credenciais de Teste
-
+```text
+http://localhost:3000
 ```
+
+## Login de teste
+
+```text
 Email: admin@admin
 Senha: 123
 ```
 
----
+## URLs principais
 
-## 📱 URLs Principais
-
-| URL | Descrição |
-|-----|-----------|
-| `/` | Página inicial pública |
-| `/servicos` | Catálogo de serviços |
-| `/produtos` | Loja de produtos |
-| `/agendamentos` | Agendar serviço |
-| `/sistema/login` | Fazer login |
+| URL | Descricao |
+| --- | --- |
+| `/` | Pagina inicial publica |
+| `/servicos` | Catalogo de servicos |
+| `/produtos` | Produtos |
+| `/agendamentos` | Agendar servico |
+| `/cadastro/barbearia` | Cadastro de barbearia |
+| `/cadastro/barbeiro` | Cadastro de barbeiro autonomo |
+| `/area-cliente` | Area do cliente |
+| `/sistema/login` | Login administrativo |
 | `/sistema/painel` | Dashboard administrativo |
 | `/sistema/painel/agendamentos` | Gerenciar agendamentos |
 | `/sistema/painel/clientes` | Gerenciar clientes |
-| `/sistema/painel/usuarios` | Gerenciar usuários |
-| `/sistema/painel/servicos` | Gerenciar serviços |
+| `/sistema/painel/usuarios` | Gerenciar usuarios |
+| `/sistema/painel/servicos` | Gerenciar servicos |
 | `/sistema/painel/produtos` | Gerenciar produtos |
 | `/sistema/painel/financeiro/receber` | Contas a receber |
 | `/sistema/painel/financeiro/pagar` | Contas a pagar |
-| `/sistema/painel/relatorios` | Relatórios |
+| `/sistema/painel/relatorios` | Relatorios |
 
----
+## APIs REST
 
-## 🔌 APIs REST
+### Health check
 
-### GET - Listar Serviços
 ```bash
-curl http://localhost:5000/api/servicos
+curl http://localhost:3000/api/health
 ```
 
-### GET - Listar Funcionários
+### Listar servicos
+
 ```bash
-curl http://localhost:5000/api/funcionarios
+curl http://localhost:3000/api/servicos
 ```
 
-### GET - Horários Disponíveis
+### Listar funcionarios
+
 ```bash
-curl http://localhost:5000/api/horarios/1/2024-05-20
+curl http://localhost:3000/api/funcionarios
 ```
 
-### POST - Criar Agendamento
+### Horarios disponiveis
+
 ```bash
-curl -X POST http://localhost:5000/api/agendamentos \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nome": "João",
-    "telefone": "(11) 99999-9999",
-    "funcionario_id": 1,
-    "servico_id": 1,
-    "data": "2024-05-20",
-    "hora": "14:00"
-  }'
+curl http://localhost:3000/api/horarios/1/2026-06-20
 ```
 
----
+### Criar agendamento
 
-## 📁 Estrutura de Arquivos
-
-```
-barbearia-python/
-├── app/                 # Código da aplicação
-│   ├── blueprints/      # Rotas (auth, main, dashboard, etc)
-│   ├── templates/       # Templates HTML
-│   ├── static/          # CSS, JS, images
-│   ├── models.py        # Modelos do banco de dados
-│   └── __init__.py      # Inicialização
-├── config.py            # Configurações
-├── run.py               # Script principal
-├── init_db.py           # Inicializar banco de dados
-├── requirements.txt     # Dependências
-├── README.md            # Documentação
-├── QUICK_START.md       # Este arquivo
-└── .env.example         # Variáveis de exemplo
+```bash
+curl -X POST http://localhost:3000/api/agendamentos ^
+  -H "Content-Type: application/json" ^
+  -d "{\"nome\":\"Joao\",\"telefone\":\"(11) 99999-9999\",\"funcionario_id\":1,\"servico_id\":1,\"data\":\"2026-06-20\",\"hora\":\"14:00\"}"
 ```
 
----
+## Estrutura resumida
 
-## 🐛 Troubleshooting
+```text
+app/
+|-- blueprints/   # Rotas do sistema
+|-- templates/    # Paginas HTML
+|-- static/       # Arquivos estaticos
+|-- models.py     # Modelos do banco
+`-- __init__.py   # Criacao do app Flask
+```
 
-### Erro: ModuleNotFoundError
+## Problemas comuns
+
+### `ModuleNotFoundError`
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### Erro: Database connection refused
-- MySQL está rodando?
-- Credenciais corretas em `config.py`?
-- Banco `barbearia` existe?
+### Banco nao conecta
 
-### Erro: "405 Method Not Allowed"
-- Verifique o método HTTP (GET, POST, etc)
-- Verifique a URL da rota
+- Confirme se `DATABASE_URL` esta correto.
+- Se usar MySQL, confira se o servidor esta rodando.
+- Se quiser desenvolvimento simples, remova `DATABASE_URL` e use SQLite.
 
----
+### A pagina nao abre em `localhost:5000`
 
-## 🚀 Próximos Passos
+Este projeto roda na porta `3000` pelo `run.py`. Use:
 
-1. **Criar Usuários** - `/sistema/painel/usuarios/novo`
-2. **Criar Serviços** - `/sistema/painel/servicos/novo`
-3. **Criar Produtos** - `/sistema/painel/produtos/novo`
-4. **Configurar Sistema** - Editar `config.py`
-5. **Testar Agendamentos** - `/agendamentos`
+```text
+http://localhost:3000
+```
 
----
+## Proximos passos
 
-## 📖 Documentação Completa
-
-Leia o `README.md` para documentação completa do projeto.
-
----
-
-## 💡 Dicas
-
-- Use `FLASK_DEBUG=True` para development
-- Verifique logs no console
-- Use o DevTools do navegador (F12)
-- Teste APIs com Postman ou cURL
-
----
-
-**Sucesso! 🎉**
+1. Entrar no painel com `admin@admin` e senha `123`.
+2. Cadastrar ou revisar servicos.
+3. Cadastrar produtos.
+4. Testar um agendamento publico.
+5. Ler o `README.md` para entender a arquitetura completa.
