@@ -20,11 +20,17 @@ def index():
     config = Config.query.first()
     comentarios = Comentario.query.filter_by(ativo='Sim').all()
     textos = TextoIndex.query.filter_by(ativo='Sim').order_by(TextoIndex.ordem).all()
+    servicos = Servico.query.filter_by(ativo='Sim').limit(3).all()
+    produtos = Produto.query.limit(3).all()
+    total_clientes = Cliente.query.count()
     
     return render_template('public/index.html', 
                          config=config,
                          comentarios=comentarios,
-                         textos=textos)
+                         textos=textos,
+                         servicos=servicos,
+                         produtos=produtos,
+                         total_clientes=total_clientes)
 
 
 @main_bp.route('/servicos')

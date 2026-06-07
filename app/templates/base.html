@@ -11,11 +11,11 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
         }
-        
+
         .navbar {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         .login-container {
             display: flex;
             align-items: center;
@@ -23,7 +23,7 @@
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
+
         .login-box {
             width: 100%;
             max-width: 400px;
@@ -32,23 +32,23 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             padding: 40px;
         }
-        
+
         .login-box h2 {
             color: #333;
             margin-bottom: 30px;
             text-align: center;
             font-weight: 700;
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
         }
-        
+
         .btn-primary:hover {
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
-        
+
         footer {
             background-color: #333;
             color: white;
@@ -89,7 +89,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             {% if current_user.cartoes is defined %}
-                            <!-- É um CLiente -->
+                            <!-- É um Cliente -->
                             <li><a class="dropdown-item" href="{{ url_for('area_cliente.index') }}">Meu Painel</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="{{ url_for('area_cliente.logout') }}">Sair</a></li>
@@ -117,7 +117,7 @@
         </div>
     </nav>
     {% endblock %}
-    
+
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -129,17 +129,17 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
+
         {% block content %}{% endblock %}
     </main>
-    
+
     <footer class="mt-5">
         <div class="container">
             <p>&copy; <span id="current-year"></span> BARBEARIA ZUH. Todos os direitos reservados.</p>
             <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
         </div>
     </footer>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {% block extra_js %}{% endblock %}

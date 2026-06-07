@@ -1,260 +1,789 @@
 {% extends "base.html" %}
 
-{% block title %}Home - BARBEARIA ZUH{% endblock %}
+{% block title %}{{ config.nome if config else 'BARBEARIA ZUH' }} - Corte, barba e estilo{% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
     :root {
-        --primary-gold: #c5a880;
-        --dark-bg: #111111;
-        --card-bg: #1a1a1a;
+        --black: #0a0c0b;
+        --graphite: #121614;
+        --graphite-2: #1a201d;
+        --cream: #f4efe6;
+        --cream-2: #ded3c2;
+        --muted: #9f978c;
+        --brass: #c89b4a;
+        --red: #7d2424;
+        --green: #617065;
+        --line-dark: rgba(244, 239, 230, 0.13);
+        --line-light: rgba(10, 12, 11, 0.12);
     }
+
     body {
+        background: var(--black);
+        color: var(--cream);
         font-family: 'Inter', sans-serif;
-        background-color: #0a0a0a;
-        color: #f0f0f0;
     }
-    h1, h2, h3, .font-serif {
+
+    h1,
+    h2 {
         font-family: 'Playfair Display', serif;
     }
-    .hero-section {
-        position: relative;
-        height: 85vh;
-        min-height: 600px;
-        background: url('/static/images/hero-bg.jpg') center/cover no-repeat;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-    .hero-overlay {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(10,10,10,1) 100%);
-    }
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        max-width: 800px;
-        padding: 0 20px;
-    }
-    .hero-title {
-        font-size: 4.5rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 20px;
-        text-transform: uppercase;
-        letter-spacing: 4px;
-        text-shadow: 0 4px 20px rgba(0,0,0,0.8);
-    }
-    .hero-subtitle {
-        font-size: 1.3rem;
-        color: #c5a880;
-        font-weight: 300;
-        margin-bottom: 40px;
-        letter-spacing: 1px;
-    }
-    .btn-gold {
-        background: var(--primary-gold);
-        color: #000;
-        padding: 16px 45px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        border: none;
-        border-radius: 4px;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-block;
-    }
-    .btn-gold:hover {
-        background: #fff;
-        color: #000;
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(197, 168, 128, 0.2);
-    }
-    .features-section {
-        padding: 100px 0;
-        background-color: #0a0a0a;
-    }
-    .feature-card {
-        background: var(--card-bg);
-        border: 1px solid rgba(197, 168, 128, 0.1);
-        padding: 50px 30px;
-        border-radius: 8px;
-        height: 100%;
-        transition: all 0.4s ease;
-        text-align: center;
-        position: relative;
+
+    main {
         overflow: hidden;
     }
-    .feature-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 3px;
-        background: var(--primary-gold);
-        transform: scaleX(0);
-        transition: transform 0.4s ease;
+
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 40;
+        background: rgba(10, 12, 11, 0.84) !important;
+        border-bottom: 1px solid var(--line-dark);
+        box-shadow: none;
+        backdrop-filter: blur(18px);
     }
-    .feature-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+
+    .navbar-brand {
+        font-size: 0.92rem;
+        font-weight: 900;
+        letter-spacing: 0.11em;
     }
-    .feature-card:hover::before {
-        transform: scaleX(1);
-    }
-    .feature-icon {
-        font-size: 3rem;
-        color: var(--primary-gold);
-        margin-bottom: 25px;
-        transition: transform 0.4s ease;
-    }
-    .feature-card:hover .feature-icon {
-        transform: scale(1.1);
-    }
-    .feature-card h4 {
-        color: #fff;
-        margin-bottom: 15px;
-        font-size: 1.5rem;
-    }
-    .feature-card p {
-        color: #aaa;
-        font-size: 0.95rem;
-        line-height: 1.6;
-    }
-    .btn-outline-gold {
-        border: 1px solid var(--primary-gold);
-        color: var(--primary-gold);
-        background: transparent;
-        transition: all 0.3s;
-    }
-    .btn-outline-gold:hover {
-        background: var(--primary-gold);
-        color: #000;
-    }
-    .section-title {
-        text-align: center;
-        margin-bottom: 60px;
-    }
-    .section-title h2 {
-        font-size: 2.5rem;
-        color: #fff;
-        margin-bottom: 15px;
-    }
-    .section-title .divider {
-        width: 60px;
-        height: 3px;
-        background: var(--primary-gold);
-        margin: 0 auto;
-    }
-    .testimonials-section {
-        padding: 80px 0 100px;
-        background-color: #0d0d0d;
-        border-top: 1px solid #1a1a1a;
-    }
-    .testimonial-card {
-        background: transparent;
-        border: none;
-        text-align: center;
-        padding: 20px;
-    }
-    .testimonial-text {
-        font-size: 1.1rem;
-        font-style: italic;
-        color: #ccc;
-        margin-bottom: 20px;
-        position: relative;
-        line-height: 1.8;
-    }
-    .testimonial-text::before {
-        content: '"';
-        font-size: 4rem;
-        color: rgba(197, 168, 128, 0.15);
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-family: 'Playfair Display', serif;
-    }
-    .testimonial-author {
-        color: var(--primary-gold);
-        font-weight: 600;
-        text-transform: uppercase;
+
+    .navbar .nav-link {
+        color: rgba(244, 239, 230, 0.74) !important;
         font-size: 0.9rem;
-        letter-spacing: 1px;
+        font-weight: 700;
     }
-    
-    /* Responsivo */
-    @media (max-width: 768px) {
-        .hero-title { font-size: 3rem; }
-        .hero-subtitle { font-size: 1rem; }
-        .feature-card { padding: 30px 20px; margin-bottom: 15px; }
+
+    .navbar .nav-link:hover {
+        color: #fff !important;
+    }
+
+    .navbar .btn {
+        border-color: rgba(200, 155, 74, 0.72);
+        background: rgba(200, 155, 74, 0.1);
+    }
+
+    footer {
+        margin-top: 0 !important;
+        background: var(--black);
+        border-top: 1px solid var(--line-dark);
+    }
+
+    .hero {
+        position: relative;
+        min-height: 94vh;
+        display: flex;
+        align-items: end;
+        padding: 142px 0 46px;
+        background:
+            linear-gradient(90deg, rgba(10, 12, 11, 0.97) 0%, rgba(10, 12, 11, 0.78) 47%, rgba(10, 12, 11, 0.18) 100%),
+            linear-gradient(180deg, rgba(10, 12, 11, 0.12) 0%, rgba(10, 12, 11, 0.22) 52%, var(--black) 100%),
+            url("{{ url_for('static', filename='images/' + (config.img_banner_index if config and config.img_banner_index else 'hero-bg.jpg')) }}") center/cover no-repeat;
+    }
+
+    .hero::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: var(--line-dark);
+    }
+
+    .hero-wrap {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(300px, 0.42fr);
+        gap: 62px;
+        align-items: end;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--brass);
+        font-size: 0.76rem;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+        content: "";
+        width: 38px;
+        height: 2px;
+        background: var(--red);
+    }
+
+    .hero h1 {
+        max-width: 760px;
+        margin: 18px 0 22px;
+        color: #fffaf2;
+        font-size: clamp(3.5rem, 8.8vw, 7.4rem);
+        font-weight: 900;
+        line-height: 0.86;
+        letter-spacing: 0;
+    }
+
+    .hero-text {
+        max-width: 640px;
+        margin: 0;
+        color: rgba(244, 239, 230, 0.82);
+        font-size: clamp(1.02rem, 2vw, 1.22rem);
+        line-height: 1.75;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 34px;
+    }
+
+    .btn-brand,
+    .btn-line {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 50px;
+        padding: 0 22px;
+        border-radius: 3px;
+        font-weight: 900;
+        text-decoration: none;
+        transition: transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+    }
+
+    .btn-brand {
+        background: var(--brass);
+        border: 1px solid var(--brass);
+        color: #111;
+    }
+
+    .btn-line {
+        border: 1px solid rgba(244, 239, 230, 0.36);
+        color: var(--cream);
+        background: rgba(244, 239, 230, 0.04);
+    }
+
+    .btn-brand:hover,
+    .btn-line:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-brand:hover {
+        background: #e3ba64;
+        color: #111;
+    }
+
+    .btn-line:hover {
+        color: #fff;
+        border-color: #fff;
+    }
+
+    .hero-card {
+        border: 1px solid var(--line-dark);
+        background: rgba(18, 22, 20, 0.76);
+        backdrop-filter: blur(14px);
+    }
+
+    .hero-card-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-bottom: 1px solid var(--line-dark);
+    }
+
+    .hero-stat,
+    .hero-info {
+        padding: 22px;
+    }
+
+    .hero-stat:first-child {
+        border-right: 1px solid var(--line-dark);
+    }
+
+    .hero-stat strong {
+        display: block;
+        color: #fff;
+        font-size: 2.1rem;
+        line-height: 1;
+    }
+
+    .hero-stat span,
+    .hero-info {
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .hero-info strong {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--cream);
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .section {
+        padding: 96px 0;
+    }
+
+    .section-light {
+        background: var(--cream);
+        color: var(--black);
+    }
+
+    .section-dark {
+        background: var(--graphite);
+        border-top: 1px solid var(--line-dark);
+        border-bottom: 1px solid var(--line-dark);
+    }
+
+    .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 32px;
+        margin-bottom: 38px;
+    }
+
+    .section-head h2 {
+        max-width: 720px;
+        margin: 0;
+        font-size: clamp(2.3rem, 5vw, 4.7rem);
+        font-weight: 900;
+        line-height: 0.94;
+    }
+
+    .section-head p {
+        max-width: 430px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.75;
+    }
+
+    .section-light .section-head p {
+        color: #655f57;
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .service-card {
+        display: flex;
+        min-height: 100%;
+        flex-direction: column;
+        border: 1px solid var(--line-light);
+        background: #fffaf2;
+    }
+
+    .service-media {
+        aspect-ratio: 5 / 3.4;
+        overflow: hidden;
+        background: #d9cfc0;
+    }
+
+    .service-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: saturate(0.92) contrast(1.02);
+        transition: transform .35s ease;
+    }
+
+    .service-card:hover .service-media img {
+        transform: scale(1.04);
+    }
+
+    .service-body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        padding: 24px;
+    }
+
+    .service-title {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 14px;
+    }
+
+    .service-title h3 {
+        margin: 0;
+        color: var(--black);
+        font-size: 1.24rem;
+        font-weight: 900;
+    }
+
+    .price {
+        color: var(--red);
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .service-body p {
+        margin: 0 0 24px;
+        color: #655f57;
+        line-height: 1.68;
+    }
+
+    .service-body .btn-line {
+        width: 100%;
+        min-height: 44px;
+        margin-top: auto;
+        border-color: rgba(10, 12, 11, 0.22);
+        color: var(--black);
+        background: transparent;
+    }
+
+    .service-body .btn-line:hover {
+        border-color: var(--black);
+        color: var(--black);
+    }
+
+    .craft-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.55fr);
+        gap: 54px;
+        align-items: center;
+    }
+
+    .craft-copy h2 {
+        max-width: 760px;
+        margin: 0 0 24px;
+        color: #fffaf2;
+        font-size: clamp(2.4rem, 5vw, 4.8rem);
+        line-height: 0.95;
+    }
+
+    .craft-copy p {
+        max-width: 660px;
+        margin: 0;
+        color: rgba(244, 239, 230, 0.72);
+        font-size: 1.05rem;
+        line-height: 1.85;
+    }
+
+    .ritual-list {
+        display: grid;
+        gap: 1px;
+        border: 1px solid var(--line-dark);
+        background: var(--line-dark);
+    }
+
+    .ritual-item {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        min-height: 72px;
+        padding: 18px;
+        background: var(--graphite-2);
+        color: var(--cream);
+        font-weight: 800;
+    }
+
+    .ritual-item i {
+        color: var(--brass);
+        width: 24px;
+        text-align: center;
+    }
+
+    .booking-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        border: 1px solid var(--line-dark);
+        background: var(--line-dark);
+    }
+
+    .booking-step {
+        padding: 30px;
+        background: var(--black);
+    }
+
+    .booking-step span {
+        color: var(--brass);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+    }
+
+    .booking-step h3 {
+        margin: 24px 0 10px;
+        color: #fff;
+        font-size: 1.18rem;
+        font-weight: 900;
+    }
+
+    .booking-step p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        border: 1px solid var(--line-light);
+        background: var(--line-light);
+    }
+
+    .product-card {
+        position: relative;
+        min-height: 260px;
+        overflow: hidden;
+        background: #ddd2c2;
+    }
+
+    .product-card img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.9) brightness(0.78);
+    }
+
+    .product-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(10, 12, 11, 0.05), rgba(10, 12, 11, 0.84));
+    }
+
+    .product-info {
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        bottom: 20px;
+        z-index: 2;
+    }
+
+    .product-info h3 {
+        margin: 0 0 4px;
+        color: #fff;
+        font-size: 1.06rem;
+        font-weight: 900;
+    }
+
+    .product-info p {
+        margin: 0;
+        color: var(--cream-2);
+    }
+
+    .testimonials {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .quote-card {
+        min-height: 100%;
+        padding: 28px;
+        border: 1px solid var(--line-dark);
+        background: rgba(244, 239, 230, 0.035);
+    }
+
+    .quote-card p {
+        margin: 0 0 22px;
+        color: rgba(244, 239, 230, 0.76);
+        line-height: 1.78;
+    }
+
+    .quote-card strong {
+        color: var(--brass);
+    }
+
+    .final-cta {
+        padding: 86px 0;
+        background:
+            linear-gradient(90deg, rgba(10, 12, 11, 0.98), rgba(18, 22, 20, 0.94)),
+            url("{{ url_for('static', filename='images/hero-bg.jpg') }}") center/cover no-repeat;
+        border-top: 1px solid var(--line-dark);
+    }
+
+    .final-cta .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 30px;
+    }
+
+    .final-cta h2 {
+        max-width: 780px;
+        margin: 0;
+        color: #fffaf2;
+        font-size: clamp(2.2rem, 5vw, 4.8rem);
+        line-height: 0.95;
+    }
+
+    @media (max-width: 991px) {
+        .hero {
+            min-height: auto;
+        }
+
+        .hero-wrap,
+        .section-head,
+        .craft-grid,
+        .final-cta .container {
+            display: block;
+        }
+
+        .hero-card {
+            margin-top: 42px;
+        }
+
+        .section-head p,
+        .final-cta .btn-brand {
+            margin-top: 18px;
+        }
+
+        .ritual-list {
+            margin-top: 34px;
+        }
+
+        .services-grid,
+        .booking-strip,
+        .products-grid,
+        .testimonials {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .hero {
+            padding: 124px 0 34px;
+            background-position: center;
+        }
+
+        .hero-actions a,
+        .final-cta a {
+            width: 100%;
+        }
+
+        .hero-card-row {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-stat:first-child {
+            border-right: 0;
+            border-bottom: 1px solid var(--line-dark);
+        }
+
+        .section {
+            padding: 70px 0;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-        <h1 class="hero-title">BARBEARIA ZUH</h1>
-        <p class="hero-subtitle">A Arte da Barbearia Tradicional Encontra a Tecnologia</p>
-        <a href="/agendamentos" class="btn-gold mt-4">Agendar Horário</a>
-    </div>
-</section>
-
-<!-- Features Section -->
-<section class="features-section container">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="fas fa-calendar-alt feature-icon"></i>
-                <h4 class="font-serif">Agende Online</h4>
-                <p>Nosso sistema exclusivo permite que você escolha seu barbeiro, serviço e horário de forma 100% digital e sem filas.</p>
-                <a href="/agendamentos" class="btn btn-outline-gold btn-sm mt-3 px-4 py-2">Agendar</a>
+<section class="hero">
+    <div class="container hero-wrap">
+        <div>
+            <span class="eyebrow">Corte, barba e acabamento</span>
+            <h1>{{ config.nome if config and config.nome else 'BARBEARIA ZUH' }}</h1>
+            <p class="hero-text">
+                Barbearia para quem quer sair alinhado: atendimento pontual, técnica no detalhe e agendamento online para reservar seu horário sem conversa fiada.
+            </p>
+            <div class="hero-actions">
+                <a href="/agendamentos" class="btn-brand"><i class="fas fa-calendar-check"></i> Agendar horário</a>
+                <a href="/servicos" class="btn-line"><i class="fas fa-scissors"></i> Ver serviços</a>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="fas fa-cut feature-icon"></i>
-                <h4 class="font-serif">Cortes Premium</h4>
-                <p>Nossos profissionais são especialistas nas últimas tendências e nos cortes clássicos que nunca saem de moda.</p>
-                <a href="/servicos" class="btn btn-outline-gold btn-sm mt-3 px-4 py-2">Ver Serviços</a>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="fas fa-pump-soap feature-icon"></i>
-                <h4 class="font-serif">Produtos Exclusivos</h4>
-                <p>Utilizamos e vendemos as melhores linhas de pomadas, balms e shampoos para a manutenção do seu estilo em casa.</p>
-                <a href="/produtos" class="btn btn-outline-gold btn-sm mt-3 px-4 py-2">Conhecer Loja</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Testimonials Section -->
-{% if comentarios %}
-<section class="testimonials-section">
-    <div class="container">
-        <div class="section-title">
-            <h2 class="font-serif">O que dizem nossos clientes</h2>
-            <div class="divider"></div>
-        </div>
-        <div class="row justify-content-center g-4">
-            {% for comentario in comentarios %}
-            <div class="col-md-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-text">{{ comentario.texto }}</div>
-                    <div class="testimonial-author">- {{ comentario.nome }}</div>
+        <aside class="hero-card" aria-label="Resumo da barbearia">
+            <div class="hero-card-row">
+                <div class="hero-stat">
+                    <strong>{{ total_clientes if total_clientes else '500+' }}</strong>
+                    <span>clientes atendidos</span>
+                </div>
+                <div class="hero-stat">
+                    <strong>4.9</strong>
+                    <span>experiência média</span>
                 </div>
             </div>
+            <div class="hero-info">
+                <strong>Atendimento profissional</strong>
+                Corte, barba, finalização e produtos para manter o visual em casa.
+            </div>
+        </aside>
+    </div>
+</section>
+
+<section class="section section-light">
+    <div class="container">
+        <div class="section-head">
+            <h2>Serviços com presença de barbearia.</h2>
+            <p>Escolha o atendimento, confira o valor e reserve sem precisar esperar resposta por mensagem.</p>
+        </div>
+        <div class="services-grid">
+            {% if servicos %}
+                {% for servico in servicos %}
+                <article class="service-card">
+                    <div class="service-media">
+                        {% if servico.foto %}
+                        <img src="{{ url_for('static', filename='uploads/' + servico.foto) }}" alt="{{ servico.nome }}">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/hero-bg.jpg') }}" alt="{{ servico.nome }}">
+                        {% endif %}
+                    </div>
+                    <div class="service-body">
+                        <div class="service-title">
+                            <h3>{{ servico.nome }}</h3>
+                            <span class="price">R$ {{ "%.2f"|format(servico.valor) }}</span>
+                        </div>
+                        <p>{{ servico.descricao or 'Atendimento detalhado, acabamento limpo e orientação para manter o estilo no dia a dia.' }}</p>
+                        <a href="/agendamentos" class="btn-line">Reservar agora</a>
+                    </div>
+                </article>
+                {% endfor %}
+            {% else %}
+                {% set fallback_services = [
+                    ('Corte premium', 'Tesoura, máquina, acabamento e finalização alinhada ao seu estilo.', 'R$ 45,00'),
+                    ('Barba completa', 'Toalha quente, desenho, navalha e hidratação para um acabamento limpo.', 'R$ 35,00'),
+                    ('Combo ZUH', 'Corte, barba e finalização para sair pronto de verdade.', 'R$ 75,00')
+                ] %}
+                {% for nome, descricao, valor in fallback_services %}
+                <article class="service-card">
+                    <div class="service-media">
+                        <img src="{{ url_for('static', filename='images/hero-bg.jpg') }}" alt="{{ nome }}">
+                    </div>
+                    <div class="service-body">
+                        <div class="service-title">
+                            <h3>{{ nome }}</h3>
+                            <span class="price">{{ valor }}</span>
+                        </div>
+                        <p>{{ descricao }}</p>
+                        <a href="/agendamentos" class="btn-line">Reservar agora</a>
+                    </div>
+                </article>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="section section-dark">
+    <div class="container craft-grid">
+        <div class="craft-copy">
+            <span class="eyebrow">Padrão de atendimento</span>
+            <h2>Não é só cortar. É acertar o visual.</h2>
+            <p>
+                A experiência combina consulta rápida, ferramentas preparadas, acabamento preciso e orientação de manutenção. Você senta, alinha a ideia com o barbeiro e sai com um corte que funciona fora da cadeira.
+            </p>
+        </div>
+        <div class="ritual-list">
+            <div class="ritual-item"><i class="fas fa-user-check"></i> Consulta antes do corte</div>
+            <div class="ritual-item"><i class="fas fa-spray-can-sparkles"></i> Bancada limpa e preparada</div>
+            <div class="ritual-item"><i class="fas fa-ruler-combined"></i> Acabamento com simetria</div>
+            <div class="ritual-item"><i class="fas fa-pump-soap"></i> Finalização com produto certo</div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-head">
+            <h2>Agendar ficou direto.</h2>
+            <p>Sem ligação, sem esperar confirmação manual e sem perder o horário certo.</p>
+        </div>
+        <div class="booking-strip">
+            <article class="booking-step">
+                <span>01</span>
+                <h3>Escolha o serviço</h3>
+                <p>Veja as opções e selecione o que seu visual precisa hoje.</p>
+            </article>
+            <article class="booking-step">
+                <span>02</span>
+                <h3>Marque o horário</h3>
+                <p>Escolha o período disponível e confirme sua reserva online.</p>
+            </article>
+            <article class="booking-step">
+                <span>03</span>
+                <h3>Chegue no ponto</h3>
+                <p>Atendimento preparado para começar sem enrolação.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section section-light">
+    <div class="container">
+        <div class="section-head">
+            <h2>Produtos para manter o acabamento.</h2>
+            <p>Finalizadores e cuidados para o cabelo e a barba continuarem no lugar depois da visita.</p>
+        </div>
+        <div class="products-grid">
+            {% if produtos %}
+                {% for produto in produtos %}
+                <article class="product-card">
+                    {% if produto.foto %}
+                    <img src="{{ url_for('static', filename='uploads/' + produto.foto) }}" alt="{{ produto.nome }}">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/hero-bg.jpg') }}" alt="{{ produto.nome }}">
+                    {% endif %}
+                    <div class="product-info">
+                        <h3>{{ produto.nome }}</h3>
+                        <p>R$ {{ "%.2f"|format(produto.valor_venda) }}</p>
+                    </div>
+                </article>
+                {% endfor %}
+            {% else %}
+                <article class="product-card">
+                    <img src="{{ url_for('static', filename='uploads/pomada_matte.png') }}" alt="Pomada matte">
+                    <div class="product-info"><h3>Pomada matte</h3><p>Textura e fixação natural</p></div>
+                </article>
+                <article class="product-card">
+                    <img src="{{ url_for('static', filename='uploads/balm_barba.png') }}" alt="Balm para barba">
+                    <div class="product-info"><h3>Balm para barba</h3><p>Maciez e controle diário</p></div>
+                </article>
+                <article class="product-card">
+                    <img src="{{ url_for('static', filename='uploads/oleo_barba.png') }}" alt="Óleo para barba">
+                    <div class="product-info"><h3>Óleo para barba</h3><p>Brilho saudável sem pesar</p></div>
+                </article>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% if comentarios %}
+<section class="section section-dark">
+    <div class="container">
+        <div class="section-head">
+            <h2>Cliente bom volta.</h2>
+            <p>O que falam depois de sentar na cadeira da {{ config.nome if config and config.nome else 'BARBEARIA ZUH' }}.</p>
+        </div>
+        <div class="testimonials">
+            {% for comentario in comentarios[:3] %}
+            <article class="quote-card">
+                <p>"{{ comentario.texto }}"</p>
+                <strong>{{ comentario.nome }}</strong>
+            </article>
             {% endfor %}
         </div>
     </div>
 </section>
 {% endif %}
+
+<section class="final-cta">
+    <div class="container">
+        <h2>Seu próximo corte merece horário marcado.</h2>
+        <a href="/agendamentos" class="btn-brand"><i class="fas fa-calendar-plus"></i> Agendar agora</a>
+    </div>
+</section>
 {% endblock %}
